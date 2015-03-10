@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <LinearLayout
+        android:id="@+id/proximity_ui_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/layout_border_proximity"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+            
+
+            <ImageView
+                android:id="@+id/proximity_alert_f1"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_f1_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_f2"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_f2_3_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_f3"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_f2_3_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_f4"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_f4_idle" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="102dp"
+            android:layout_height="63dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/proximity_trex" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:id="@+id/proximity_alert_b1"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_b1_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_b2"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_b2_3_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_b3"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_b2_3_idle" />
+
+            <ImageView
+                android:id="@+id/proximity_alert_b4"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="1dp"
+                android:src="@drawable/trex_proximity_b4_idle" />
+        </LinearLayout>
+    </LinearLayout>
+
+</merge>

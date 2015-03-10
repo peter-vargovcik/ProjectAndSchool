@@ -1,0 +1,267 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <com.camera.simplemjpeg.MjpegView
+        android:id="@+id/mv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+
+    <FrameLayout
+        android:id="@+id/videoScreenBlinderLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_centerVertical="true" >
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/background_trex_title" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_centerVertical="true" >
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:orientation="horizontal" >
+
+                <ToggleButton
+                    android:id="@+id/toggleConnect"
+                    android:layout_width="80px"
+                    android:layout_height="80px"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_connected_toggle_v2"
+                    android:checked="false"
+                    android:onClick="connect"
+                    android:textOff=""
+                    android:textOn="" />
+
+                <ToggleButton
+                    android:id="@+id/toggLiveSteam"
+                    android:layout_width="80px"
+                    android:layout_height="80px"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_video_stream_toggle"
+                    android:onClick="liveStreamView"
+                    android:textOff=""
+                    android:textOn="" />
+
+                <ToggleButton
+                    android:id="@+id/toggtoggleControll"
+                    android:layout_width="80px"
+                    android:layout_height="80px"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_remote_control_toggle"
+                    android:onClick="toggleControll"
+                    android:textOff=""
+                    android:textOn="" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="250px"
+                android:layout_height="80px"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/layout_border_sensor_item"
+                android:orientation="horizontal" >
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_margin="5dp"
+                    android:src="@drawable/distance_icon" />
+
+                <TextView
+                    android:id="@+id/tv_sensor_distance"
+                    android:layout_width="fill_parent"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_margin="6dp"
+                    android:text="1234"
+                    android:textColor="@android:color/white"
+                    android:textSize="30dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:orientation="horizontal" >
+
+                <ToggleButton
+                    android:id="@+id/toggleFailSafe"
+                    android:layout_width="160px"
+                    android:layout_height="80px"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_failsafe_toggle"
+                    android:textOff=""
+                    android:textOn="" />
+
+                <ToggleButton
+                    android:id="@+id/toggtoggleDashBoard"
+                    android:layout_width="80px"
+                    android:layout_height="80px"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_feeds_toggle"
+                    android:onClick="showFeedsDashboard"
+                    android:textOff=""
+                    android:textOn="" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+
+            <vargovcik.peter.atasp_companionapp.uiaddons.AnalogPad
+                android:id="@+id/analogPad2"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:tag="trueDot" />
+
+            <vargovcik.peter.atasp_companionapp.uiaddons.AnalogPad
+                android:id="@+id/analogPad"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:tag="trueDot" />
+
+            <LinearLayout
+                android:id="@+id/feeds_dashboard"
+                android:layout_width="250dp"
+                android:layout_height="300dp"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="90dp"
+                android:background="@drawable/border_hud_text_view"
+                android:orientation="vertical"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp" >
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/layout_border_sensor_item"
+                    android:orientation="horizontal" >
+
+                    <ToggleButton
+                        android:id="@+id/toggtoggleProximityView"
+                        android:layout_width="50px"
+                        android:layout_height="50px"
+                        android:layout_margin="5dp"
+                        android:background="@drawable/btn_remote_control_toggle"
+                        android:onClick="showProximityView"
+                        android:textOff=""
+                        android:textOn="" />
+
+                    <ToggleButton
+                        android:id="@+id/toggtoggleSettings01"
+                        android:layout_width="50px"
+                        android:layout_height="50px"
+                        android:layout_margin="5dp"
+                        android:background="@drawable/btn_remote_control_toggle"
+                        android:textOff=""
+                        android:textOn="" />
+                    <ToggleButton
+                        android:id="@+id/toggtoggleSettings02"
+                        android:layout_width="50px"
+                        android:layout_height="50px"
+                        android:layout_margin="5dp"
+                        android:background="@drawable/btn_remote_control_toggle"
+                        android:textOff=""
+                        android:textOn="" />
+                    <ToggleButton
+                        android:id="@+id/toggtoggleSettings03"
+                        android:layout_width="50px"
+                        android:layout_height="50px"
+                        android:layout_margin="5dp"
+                        android:background="@drawable/btn_remote_control_toggle"
+                        android:textOff=""
+                        android:textOn="" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/layout_border_sensor_item"
+                    android:orientation="horizontal" >
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_margin="6dp"
+                        android:src="@drawable/ligth_intensity_icon" />
+
+                    <TextView
+                        android:id="@+id/tv_sensor_light"
+                        android:layout_width="fill_parent"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_margin="6dp"
+                        android:text="1234"
+                        android:textColor="@android:color/white"
+                        android:textSize="30dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/layout_border_sensor_item"
+                    android:orientation="horizontal" >
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_margin="6dp"
+                        android:src="@drawable/ico_btn_remote_control_on" />
+
+                    <TextView
+                        android:id="@+id/textView1"
+                        android:layout_width="fill_parent"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_margin="6dp"
+                        android:text="1234"
+                        android:textColor="@android:color/white"
+                        android:textSize="18dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/proximity_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true" >
+
+                <include
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    layout="@layout/partial_view_proximity" />
+            </FrameLayout>
+        </RelativeLayout>
+    </FrameLayout>
+
+</FrameLayout>
