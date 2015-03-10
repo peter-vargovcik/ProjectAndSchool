@@ -85,6 +85,8 @@ public class MjpegActivity extends Activity {
         
         setTitle(R.string.title_connecting);
         new DoRead().execute(URL);
+        
+        //Test
     }
 
     
