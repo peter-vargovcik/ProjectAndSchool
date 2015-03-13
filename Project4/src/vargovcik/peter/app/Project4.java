@@ -5,6 +5,7 @@
  */
 package vargovcik.peter.app;
 
+import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.serial.Serial;
 import com.pi4j.io.serial.SerialFactory;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vargovcik.peter.compationApp.CompanionAppInterface;
 import vargovcik.peter.compationApp.CompanionAppServer;
+import vargovcik.peter.controllers.GPIOController;
 import vargovcik.peter.controllers.PeripheralsController;
 import vargovcik.peter.controllers.Trex;
 import vargovcik.peter.interfaces.SensorsInterface;
@@ -27,8 +29,10 @@ public class Project4 {
 
     private Trex trex;
     private PeripheralsController peripheralsController;
+    private GPIOController gpioController;
     private boolean operatorInControll = false;
     private long currentMilis = System.currentTimeMillis();
+    
 
     public Project4() {
         initAll();
@@ -72,6 +76,7 @@ public class Project4 {
     private void initAll() {
         trex = Trex.instance;
         peripheralsController = PeripheralsController.instance;
+        gpioController = GPIOController.instance;
     }
 
     private void enalbleVideoStream() {
@@ -153,6 +158,7 @@ public class Project4 {
                 System.out.println("Thread Server");
                 new CompanionAppServer(companionAppInterface, 8000).start();
                 System.out.println("Thread Executed");
+                gpioController.setPin1(PinState.HIGH);
             }
         }).start();
     }
