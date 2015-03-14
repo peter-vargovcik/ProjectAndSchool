@@ -155,97 +155,183 @@
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp" >
 
-                <LinearLayout
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/layout_border_sensor_item"
-                    android:orientation="horizontal" >
+                <ScrollView
+                    android:id="@+id/scrollView1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
 
-                    <ToggleButton
-                        android:id="@+id/toggtoggleProximityView"
-                        android:layout_width="50px"
-                        android:layout_height="50px"
-                        android:layout_margin="5dp"
-                        android:background="@drawable/btn_remote_control_toggle"
-                        android:onClick="showProximityView"
-                        android:textOff=""
-                        android:textOn="" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical" >
 
-                    <ToggleButton
-                        android:id="@+id/toggtoggleSettings01"
-                        android:layout_width="50px"
-                        android:layout_height="50px"
-                        android:layout_margin="5dp"
-                        android:background="@drawable/btn_remote_control_toggle"
-                        android:textOff=""
-                        android:textOn="" />
-                    <ToggleButton
-                        android:id="@+id/toggtoggleSettings02"
-                        android:layout_width="50px"
-                        android:layout_height="50px"
-                        android:layout_margin="5dp"
-                        android:background="@drawable/btn_remote_control_toggle"
-                        android:textOff=""
-                        android:textOn="" />
-                    <ToggleButton
-                        android:id="@+id/toggtoggleSettings03"
-                        android:layout_width="50px"
-                        android:layout_height="50px"
-                        android:layout_margin="5dp"
-                        android:background="@drawable/btn_remote_control_toggle"
-                        android:textOff=""
-                        android:textOn="" />
-                </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
 
-                <LinearLayout
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/layout_border_sensor_item"
-                    android:orientation="horizontal" >
+                            <ToggleButton
+                                android:id="@+id/toggtoggleProximityView"
+                                android:layout_width="50px"
+                                android:layout_height="50px"
+                                android:layout_margin="5dp"
+                                android:background="@drawable/btn_remote_control_toggle"
+                                android:onClick="showProximityView"
+                                android:textOff=""
+                                android:textOn="" />
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_margin="6dp"
-                        android:src="@drawable/ligth_intensity_icon" />
+                            <ToggleButton
+                                android:id="@+id/toggtoggleSettings01"
+                                android:layout_width="50px"
+                                android:layout_height="50px"
+                                android:layout_margin="5dp"
+                                android:background="@drawable/btn_remote_control_toggle"
+                                android:textOff=""
+                                android:textOn="" />
 
-                    <TextView
-                        android:id="@+id/tv_sensor_light"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_margin="6dp"
-                        android:text="1234"
-                        android:textColor="@android:color/white"
-                        android:textSize="30dp" />
-                </LinearLayout>
+                            <ToggleButton
+                                android:id="@+id/toggtoggleSettings02"
+                                android:layout_width="50px"
+                                android:layout_height="50px"
+                                android:layout_margin="5dp"
+                                android:background="@drawable/btn_remote_control_toggle"
+                                android:textOff=""
+                                android:textOn="" />
 
-                <LinearLayout
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/layout_border_sensor_item"
-                    android:orientation="horizontal" >
+                            <ToggleButton
+                                android:id="@+id/toggtoggleSettings03"
+                                android:layout_width="50px"
+                                android:layout_height="50px"
+                                android:layout_margin="5dp"
+                                android:background="@drawable/btn_remote_control_toggle"
+                                android:textOff=""
+                                android:textOn="" />
+                        </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_margin="6dp"
-                        android:src="@drawable/ico_btn_remote_control_on" />
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
 
-                    <TextView
-                        android:id="@+id/textView1"
-                        android:layout_width="fill_parent"
-                        android:layout_height="40dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_margin="6dp"
-                        android:text="1234"
-                        android:textColor="@android:color/white"
-                        android:textSize="18dp" />
-                </LinearLayout>
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ligth_intensity_icon" />
+
+                            <TextView
+                                android:id="@+id/tv_sensor_light"
+                                android:layout_width="fill_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="30dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
+
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ligth_intensity_icon" />
+
+                            <TextView
+                                android:id="@+id/tv_sensor_temperature"
+                                android:layout_width="fill_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="30dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
+
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ligth_intensity_icon" />
+
+                            <TextView
+                                android:id="@+id/tv_sensor_bar_pressure"
+                                android:layout_width="fill_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="30dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
+
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ligth_intensity_icon" />
+
+                            <TextView
+                                android:id="@+id/tv_sensor_bar_altitute"
+                                android:layout_width="fill_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="30dp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
+
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:src="@drawable/ico_btn_remote_control_on" />
+
+                            <TextView
+                                android:id="@+id/textView1"
+                                android:layout_width="fill_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="18dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </ScrollView>
             </LinearLayout>
 
             <FrameLayout

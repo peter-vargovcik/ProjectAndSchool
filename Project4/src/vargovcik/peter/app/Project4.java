@@ -75,6 +75,7 @@ public class Project4 {
 
     private void initAll() {
         trex = Trex.instance;
+                
         peripheralsController = PeripheralsController.instance;
         gpioController = GPIOController.instance;
     }
@@ -128,6 +129,7 @@ public class Project4 {
         @Override
         public void remoteControlCommand(byte[] command) {
             if (command != null && operatorInControll) {
+//                System.out.println("controled");
                 trex.trexExecute(command);
             }
         }

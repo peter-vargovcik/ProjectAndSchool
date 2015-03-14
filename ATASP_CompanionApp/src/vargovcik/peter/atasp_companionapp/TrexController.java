@@ -60,6 +60,7 @@ import android.widget.ToggleButton;
 
 public class TrexController extends Activity {
 	private static final boolean DEBUG = false;
+	private static final int OBJECT_OUTPUT_STREAM_S_LOOPS_TRESHOLD = 500;
 	private static final String TAG = "MJPEG";
 	private Activity activity;
 
@@ -80,7 +81,7 @@ public class TrexController extends Activity {
 	private int motorA, motorB, trexMaxPower, pan, tilt;
 
 	AnalogPad analogPadDrive, analogPadPanTilt;
-	TextView textView,lightSensorTV,distanceSensorTV;
+	TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV;
 	boolean keyUp = false;
 	private boolean whatchStream = false;
 	private HelperMethods helperMethods;
@@ -116,6 +117,7 @@ public class TrexController extends Activity {
 		public void analogPadEvent(float xPosition, float yPosition) {
 			int x = (int) xPosition;
 			int y = (int) yPosition;
+			calculateTrexDrive(x, y);
 		}
 		@Override
 		public void analogPadKeyEvent(ANALOG_PAD event) {
@@ -176,6 +178,10 @@ public class TrexController extends Activity {
 		textView 			= (TextView) findViewById(R.id.textView1);
 		lightSensorTV 		= (TextView) findViewById(R.id.tv_sensor_light);
 		distanceSensorTV 	= (TextView) findViewById(R.id.tv_sensor_distance);
+		temperatureSensorTV	= (TextView) findViewById(R.id.tv_sensor_temperature);
+		barPressureSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_pressure);
+		altitudeSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_altitute);		
+		
 		
 		analogPadDrive.setAnalogPadInterface(analogPadInterfaceDrive);
 		analogPadDrive.setBackgroundBitmap(bmpBase);
@@ -531,15 +537,17 @@ public class TrexController extends Activity {
 	    int distance = responce.getDistance();
 //	    int motorPower = responce.getMotorPower();
 //	    int messageType = responce.getMessageType();
-//	    float temperatureReading = responce.getTemperatureReading();
+	    float temperatureReading = responce.getTemperatureReading();
 //	    float humidityReading = responce.getHumidityReading();
-//	    float atmosphericPressure = responce.getAtmosphericPressure();
+	    float atmosphericPressure = responce.getAtmosphericPressure();
 	    
 	    updateProximityUI(getProximityArray(proximity));
 	    
 	    lightSensorTV.setText(""+lightSensitivity);
 	    distanceSensorTV.setText(""+distance+" cm");
-		
+	    temperatureSensorTV.setText(""+temperatureReading+" C");
+	    barPressureSensorTV.setText(""+atmosphericPressure+" Kpa");
+	    
 		if(remoteControlChangeRequested){
 			btnRemoteControl.setEnabled(true);
 			btnRemoteControl.setChecked(remoteControllEnabled);
@@ -648,13 +656,15 @@ public class TrexController extends Activity {
 		request.setRemoteControllEnabled(remoteControlled);
 		
 		// request.setPanTiltCommand(new int[] {pan,tilt});
+		
 		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });
+		
 		
 		//workarround : pan def center :100 tilt def center: 90
 		panTiltWorkArround();
 		request.setPanTiltCommand(new int[] { pan, tilt });
 
-		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");
+		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");		
 		return request;
 	}
 
@@ -699,8 +709,14 @@ public class TrexController extends Activity {
 				out.flush();
 				in = new ObjectInputStream(connection.getInputStream());
 				publishProgress(new Updateobject(Updateobject.CONNECTING_SUCESS));
+				
+				int loopCount = 0;
 
 				do {
+					if(loopCount>OBJECT_OUTPUT_STREAM_S_LOOPS_TRESHOLD){
+						out.reset();
+						loopCount = 0;
+					}
 					try {
 
 						CompanionAppData request = prepareRequest();
@@ -729,6 +745,7 @@ public class TrexController extends Activity {
 						Log.e("ERROR", "data received in unknown format: "
 								+ classNot.getMessage());
 					}
+					loopCount++;
 				} while (connectionStatus);
 			} catch (UnknownHostException unknownHost) {
 				System.err.println("You are trying to connect to an unknown host!");

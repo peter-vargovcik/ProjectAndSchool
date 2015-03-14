@@ -146,7 +146,7 @@ public class CompanionAppServer {
             byte[] command = new byte[2];
             command[0] = (byte) dataRequest.getPanTiltCommand()[0];
             command[1] = (byte) dataRequest.getPanTiltCommand()[1];
-            appInterface.panTiltContollCommand(command);
+//            appInterface.panTiltContollCommand(command);
         }
             
     }
@@ -216,10 +216,9 @@ public class CompanionAppServer {
 //                System.out.println("Temperature: " + NF.format(temp) + " C");
 //                System.out.println("Pressure   : " + NF.format(press / 100) + " hPa");
 //                System.out.println("Altitude   : " + NF.format(alt) + " m");
-                baromethricPressure = temp;
-                ambientTemperature  = press / 100;
-                altitude         
-                        = alt;
+                ambientTemperature = temp;
+                baromethricPressure  = press / 100;
+                altitude  = alt;
                 // Bonus : CPU Temperature
                 try
                 {
