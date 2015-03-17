@@ -159,6 +159,7 @@ public class CompanionAppServer {
         response.setProximity(proximityByte);
         response.setTemperatureReading(ambientTemperature);
         response.setAtmosphericPressure(baromethricPressure);
+        response.setAltitude(altitude);
         return response;
     }
     
@@ -189,7 +190,7 @@ public class CompanionAppServer {
         public void run() {
             final NumberFormat NF = new DecimalFormat("##00.00");
             AdafruitBMP180 sensor = new AdafruitBMP180();
-            float press = 0;
+            float press = 57; // Sea kevel in athlone
             float temp  = 0;
             double alt  = 0;
             
@@ -200,7 +201,7 @@ public class CompanionAppServer {
                   System.err.println(ex.getMessage()); 
                   ex.printStackTrace();
                 }
-                sensor.setStandardSeaLevelPressure((int)press); // As we ARE at the sea level (in San Francisco).
+                sensor.setStandardSeaLevelPressure((int)press);
                 try { alt = sensor.readAltitude(); } 
                 catch (Exception ex) 
                 { 
