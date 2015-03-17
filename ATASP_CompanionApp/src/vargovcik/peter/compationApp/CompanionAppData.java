@@ -15,12 +15,13 @@ import java.util.Arrays;
 public class CompanionAppData implements Serializable {
 
     public static int RESPONSE = 2, REQUEST = 1;
-    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, proximitySensorsEnabled;
+    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, proximitySensorsEnabled, searchEnabled;
     private byte[] motorsCommand;
     private int[] panTiltCommand;
     private byte proximity;
     private int lightSensitivity, motorPower, messageType,distance;
     private float temperatureReading, humidityReading, atmosphericPressure;
+    double altitude;
 
     public CompanionAppData() {
         super();
@@ -146,11 +147,41 @@ public class CompanionAppData implements Serializable {
     public void setDistance(int distance) {
         this.distance = distance;
     }
+
+	public double getAltitude() {
+		return altitude;
+	}
+
+	public void setAltitude(double altitude) {
+		this.altitude = altitude;
+	}
+
+	public boolean isSearchEnabled() {
+		return searchEnabled;
+	}
+
+	public void setSearchEnabled(boolean searchEnabled) {
+		this.searchEnabled = searchEnabled;
+	}
+
+	@Override
+	public String toString() {
+		return "CompanionAppData [connectionOpen=" + connectionOpen
+				+ ", connected=" + connected + ", liveStreamEnabled="
+				+ liveStreamEnabled + ", remoteControllEnabled="
+				+ remoteControllEnabled + ", proximitySensorsEnabled="
+				+ proximitySensorsEnabled + ", searchEnabled=" + searchEnabled
+				+ ", motorsCommand=" + Arrays.toString(motorsCommand)
+				+ ", panTiltCommand=" + Arrays.toString(panTiltCommand)
+				+ ", proximity=" + proximity + ", lightSensitivity="
+				+ lightSensitivity + ", motorPower=" + motorPower
+				+ ", messageType=" + messageType + ", distance=" + distance
+				+ ", temperatureReading=" + temperatureReading
+				+ ", humidityReading=" + humidityReading
+				+ ", atmosphericPressure=" + atmosphericPressure
+				+ ", altitude=" + altitude + "]";
+	}
     
     
-    @Override
-    public String toString() {
-        return "CompanionAppData{" + "connectionOpen=" + connectionOpen + ", connected=" + connected + ", liveStreamEnabled=" + liveStreamEnabled + ", remoteControllEnabled=" + remoteControllEnabled + ", proximitySensorsEnabled=" + proximitySensorsEnabled + ", motorsCommand=" + motorsCommand + ", panTiltCommand=" + panTiltCommand + ", proximity=" + proximity + ", lightSensitivity=" + lightSensitivity + ", motorPower=" + motorPower + ", messageType=" + messageType + ", temperatureReading=" + temperatureReading + ", humidityReading=" + humidityReading + ", atmosphericPressure=" + atmosphericPressure + '}';
-    }
 
 }

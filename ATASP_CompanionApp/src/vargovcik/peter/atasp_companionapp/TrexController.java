@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -59,7 +60,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class TrexController extends Activity {
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	private static final int OBJECT_OUTPUT_STREAM_S_LOOPS_TRESHOLD = 500;
 	private static final String TAG = "MJPEG";
 	private Activity activity;
@@ -69,19 +70,19 @@ public class TrexController extends Activity {
 	private ObjectInputStream in;
 	private boolean connectionStatus = true;
 	private boolean remoteControlChangeRequested = false;
-	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleFailSafe;
+	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll; 
 	
 	private ImageView proximityB1,proximityB2,proximityB3,proximityB4,proximityF1,proximityF2,proximityF3,proximityF4;
 	private boolean[] proximityLaststate = new boolean[8];
 	private LinearLayout proximityView;
 	
-	Context context;
+	private Context context;
 	boolean remoteControlled = false;
 	private byte[] trexCommand = new byte[2];
 	private int motorA, motorB, trexMaxPower, pan, tilt;
 
-	AnalogPad analogPadDrive, analogPadPanTilt;
-	TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV;
+	private AnalogPad analogPadDrive, analogPadPanTilt;
+	private TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV;
 	boolean keyUp = false;
 	private boolean whatchStream = false;
 	private HelperMethods helperMethods;
@@ -89,7 +90,7 @@ public class TrexController extends Activity {
 	// video Stream Stuff
 
 	private MjpegView mv = null;
-	String URL;
+	private String URL;
 
 	// for settings (network and resolution)
 	private static final int REQUEST_SETTINGS = 0;
@@ -108,9 +109,11 @@ public class TrexController extends Activity {
 	private boolean idVideoStreamEnabled = false;
 
 	final Handler handler = new Handler();
-	private LinearLayout feedsDashboard;
+	private LinearLayout feedsDashboard, missionControllDashboard;
 	private FrameLayout videoScreenBlinderLayout, proximityLayout;
-	private Animation feedsDashboardSlideIn, feedsDashboardSlideOut,videoScreenSlideIn, videoScreenSlideOut,proximityViewSlideIn, proximityViewSlideOut;
+	private Animation feedsDashboardSlideIn, feedsDashboardSlideOut,videoScreenSlideIn, 
+			videoScreenSlideOut,proximityViewSlideIn, proximityViewSlideOut,
+			missionControllDashboardSlideIn,missionControllDashboardSlideOut;
 	
 	private AnalogPadInterface analogPadInterfaceDrive = new AnalogPadInterface() {
 		@Override
@@ -154,7 +157,7 @@ public class TrexController extends Activity {
 		setContentView(R.layout.activity_trex_controller);
 		context = this;
 		helperMethods = HelperMethods.instance;
-		activity = this;
+		activity = this; 
 		
 		Bitmap bmpAnalogDisabled = BitmapFactory.decodeResource(getResources(),
 				R.drawable.analog_nob_disabled);
@@ -165,11 +168,11 @@ public class TrexController extends Activity {
 		Bitmap bmpNobIdle = BitmapFactory.decodeResource(getResources(),
 				R.drawable.analog_nob_idle);
 
-		btnConnect 			= (ToggleButton) findViewById(R.id.toggleConnect);
-		btnVideoFeed		= (ToggleButton) findViewById(R.id.toggLiveSteam); 
-		btnRemoteControl	= (ToggleButton) findViewById(R.id.toggtoggleControll); 
-		btnFeeds			= (ToggleButton) findViewById(R.id.toggtoggleDashBoard);
-		toggleFailSafe		= (ToggleButton) findViewById(R.id.toggleFailSafe);
+		btnConnect 				= (ToggleButton) findViewById(R.id.toggleConnect);
+		btnVideoFeed			= (ToggleButton) findViewById(R.id.toggLiveSteam); 
+		btnRemoteControl		= (ToggleButton) findViewById(R.id.toggtoggleControll); 
+		btnFeeds				= (ToggleButton) findViewById(R.id.toggtoggleDashBoard);
+		toggleMissionControll	= (ToggleButton) findViewById(R.id.toggleMissionControll);
 		
 		analogPadDrive 		= (AnalogPad) findViewById(R.id.analogPad);
 		analogPadPanTilt 	= (AnalogPad) findViewById(R.id.analogPad2);
@@ -198,18 +201,24 @@ public class TrexController extends Activity {
 //		proximityView = (LinearLayout) findViewById(R.id.proximity_ui_layout);
 				
 		feedsDashboard 	= (LinearLayout) findViewById(R.id.feeds_dashboard);
+		missionControllDashboard = (LinearLayout) findViewById(R.id.mission_controll_dashboard);
+		
 		feedsDashboard.setVisibility(View.INVISIBLE);
+		missionControllDashboard.setVisibility(View.INVISIBLE);
+		
 		videoScreenBlinderLayout = (FrameLayout) findViewById(R.id.videoScreenBlinderLayout);
 		videoScreenBlinderLayout.setVisibility(View.VISIBLE);
 		proximityLayout = (FrameLayout) findViewById(R.id.proximity_layout);
 		proximityLayout.setVisibility(View.INVISIBLE);
 		
-		feedsDashboardSlideIn 	= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_in);
-		feedsDashboardSlideOut	= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_out);
-		videoScreenSlideIn		= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_in); 
-		videoScreenSlideOut		= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_out);
-		proximityViewSlideIn		= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_in); 
-		proximityViewSlideOut		= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_out);
+		feedsDashboardSlideIn 				= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_in);
+		feedsDashboardSlideOut				= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_out);
+		missionControllDashboardSlideIn 	= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_in);
+		missionControllDashboardSlideOut	= AnimationUtils.loadAnimation(context, R.anim.dashboard_slide_out);
+		videoScreenSlideIn					= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_in); 
+		videoScreenSlideOut					= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_out);
+		proximityViewSlideIn				= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_in); 
+		proximityViewSlideOut				= AnimationUtils.loadAnimation(context, R.anim.video_screen_slide_out);
 		
 		//init the Proximity UI
 		initProximityUI();
@@ -219,7 +228,7 @@ public class TrexController extends Activity {
 		btnFeeds.setEnabled(false);
 		analogPadDrive.setEnabled(false);
 		analogPadPanTilt.setEnabled(false);
-		toggleFailSafe.setEnabled(false);
+		toggleMissionControll.setEnabled(false);
 		
 		//demo and test override
 		btnConnect.setOnLongClickListener(new OnLongClickListener() {
@@ -230,7 +239,7 @@ public class TrexController extends Activity {
 				btnVideoFeed.setEnabled(true); 
 				btnRemoteControl.setEnabled(true); 
 				btnFeeds.setEnabled(true);
-				toggleFailSafe.setEnabled(true);
+				toggleMissionControll.setEnabled(true);
 				analogPadDrive.setEnabled(true);
 				analogPadPanTilt.setEnabled(true);
 				return false;
@@ -287,14 +296,14 @@ public class TrexController extends Activity {
 	}
 
 	private void initProximityUI() {
-		proximityB1	= (ImageView) findViewById(R.id.proximity_alert_f1);
-		proximityB2	= (ImageView) findViewById(R.id.proximity_alert_f2);
-		proximityB3	= (ImageView) findViewById(R.id.proximity_alert_f3);
-		proximityB4	= (ImageView) findViewById(R.id.proximity_alert_f4);
-		proximityF1	= (ImageView) findViewById(R.id.proximity_alert_b1);
-		proximityF2	= (ImageView) findViewById(R.id.proximity_alert_b2);
-		proximityF3	= (ImageView) findViewById(R.id.proximity_alert_b3);
-		proximityF4	= (ImageView) findViewById(R.id.proximity_alert_b4);	
+		proximityB1	= (ImageView) findViewById(R.id.proximity_alert_b1);
+		proximityB2	= (ImageView) findViewById(R.id.proximity_alert_b2);
+		proximityB3	= (ImageView) findViewById(R.id.proximity_alert_b3);
+		proximityB4	= (ImageView) findViewById(R.id.proximity_alert_b4);
+		proximityF1	= (ImageView) findViewById(R.id.proximity_alert_f1);
+		proximityF2	= (ImageView) findViewById(R.id.proximity_alert_f2);
+		proximityF3	= (ImageView) findViewById(R.id.proximity_alert_f3);
+		proximityF4	= (ImageView) findViewById(R.id.proximity_alert_f4);	
 	}
 
 	private void calculateTrexDrive(int x, int y) {
@@ -426,6 +435,11 @@ public class TrexController extends Activity {
 	public void showFeedsDashboard(View view){
 		boolean on = ((ToggleButton) view).isChecked();
 		if(on){
+			if(toggleMissionControll.isChecked()){
+				toggleMissionControll.setChecked(false);
+				missionControllDashboard.startAnimation(missionControllDashboardSlideOut);
+				missionControllDashboard.setVisibility(View.INVISIBLE);
+			}
 			feedsDashboard.startAnimation(feedsDashboardSlideIn);
 			feedsDashboard.setVisibility(View.VISIBLE);		
 		}else{
@@ -433,6 +447,22 @@ public class TrexController extends Activity {
 			feedsDashboard.setVisibility(View.INVISIBLE);	
 		}
 		
+	}
+	
+	public void showMissionControllDashboard(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		if(on){
+			if(btnFeeds.isChecked()){
+				btnFeeds.setChecked(false);
+				feedsDashboard.startAnimation(feedsDashboardSlideOut);
+				feedsDashboard.setVisibility(View.INVISIBLE);
+			}
+			missionControllDashboard.startAnimation(missionControllDashboardSlideIn);
+			missionControllDashboard.setVisibility(View.VISIBLE);		
+		}else{
+			missionControllDashboard.startAnimation(missionControllDashboardSlideOut);
+			missionControllDashboard.setVisibility(View.INVISIBLE);	
+		}
 	}
 	
 	public void showProximityView(View view){
@@ -540,14 +570,19 @@ public class TrexController extends Activity {
 	    float temperatureReading = responce.getTemperatureReading();
 //	    float humidityReading = responce.getHumidityReading();
 	    float atmosphericPressure = responce.getAtmosphericPressure();
+	    double altitude = responce.getAltitude();
 	    
 	    updateProximityUI(getProximityArray(proximity));
 	    
 	    lightSensorTV.setText(""+lightSensitivity);
 	    distanceSensorTV.setText(""+distance+" cm");
 	    temperatureSensorTV.setText(""+temperatureReading+" C");
-	    barPressureSensorTV.setText(""+atmosphericPressure+" Kpa");
 	    
+	    DecimalFormat f = new DecimalFormat("##.00");
+	    
+	    barPressureSensorTV.setText(""+f.format(atmosphericPressure/100)+"Kpa");
+	    altitudeSensorTV.setText(""+f.format(altitude)); 
+	    	    
 		if(remoteControlChangeRequested){
 			btnRemoteControl.setEnabled(true);
 			btnRemoteControl.setChecked(remoteControllEnabled);
@@ -563,50 +598,52 @@ public class TrexController extends Activity {
 
 	}
 	
+	
+	
 	private void updateProximityUI(boolean[] proximityArray) {
-		if(proximityArray[7]/* && !proximityLaststate[4]*/){
+		if(proximityArray[0]/* && !proximityLaststate[4]*/){
 			proximityF1.setImageResource(R.drawable.trex_proximity_f1_triggered);
 		}else{
 			proximityF1.setImageResource(R.drawable.trex_proximity_f1_idle);
 		}
 		
-		if(proximityArray[6]/* && !proximityLaststate[5]*/){
+		if(proximityArray[1]/* && !proximityLaststate[5]*/){
 			proximityF2.setImageResource(R.drawable.trex_proximity_f2_3_triggered);
 		}else{
 			proximityF2.setImageResource(R.drawable.trex_proximity_f2_3_idle);
 		}
 		
-		if(proximityArray[5]/* && !proximityLaststate[6]*/){
+		if(proximityArray[2]/* && !proximityLaststate[6]*/){
 			proximityF3.setImageResource(R.drawable.trex_proximity_f2_3_triggered);
 		}else{
 			proximityF3.setImageResource(R.drawable.trex_proximity_f2_3_idle);
 		}
 		
-		if(proximityArray[4]/* && !proximityLaststate[7]*/){
+		if(proximityArray[3]/* && !proximityLaststate[7]*/){
 			proximityF4.setImageResource(R.drawable.trex_proximity_f4_triggered);
 		}else{
 			proximityF4.setImageResource(R.drawable.trex_proximity_f4_idle);
 		}
 		
-		if(proximityArray[3]/* && !proximityLaststate[3]*/){
+		if(proximityArray[4]/* && !proximityLaststate[3]*/){
 			proximityB4.setImageResource(R.drawable.trex_proximity_b4_triggered);
 		}else{
 			proximityB4.setImageResource(R.drawable.trex_proximity_b4_idle);
 		}
 		
-		if(proximityArray[2]/* && !proximityLaststate[2]*/){
+		if(proximityArray[5]/* && !proximityLaststate[2]*/){
 			proximityB3.setImageResource(R.drawable.trex_proximity_b2_3_triggered);
 		}else{
 			proximityB3.setImageResource(R.drawable.trex_proximity_b2_3_idle);
 		}
 		
-		if(proximityArray[1]/* && !proximityLaststate[1]*/){
+		if(proximityArray[6]/* && !proximityLaststate[1]*/){
 			proximityB2.setImageResource(R.drawable.trex_proximity_b2_3_triggered);
 		}else{
 			proximityB2.setImageResource(R.drawable.trex_proximity_b2_3_idle);
 		}
 		
-		if(proximityArray[0] /*&& !proximityLaststate[0]*/){
+		if(proximityArray[7] /*&& !proximityLaststate[0]*/){
 			proximityB1.setImageResource(R.drawable.trex_proximity_b1_triggered);
 		}else{
 			proximityB1.setImageResource(R.drawable.trex_proximity_b1_idle);
@@ -778,7 +815,7 @@ public class TrexController extends Activity {
 				btnVideoFeed.setEnabled(true); 
 				btnRemoteControl.setEnabled(true); 
 				btnFeeds.setEnabled(true);
-				toggleFailSafe.setEnabled(true);
+				toggleMissionControll.setEnabled(true);
 				
 				btnConnect.setChecked(true);
 			}else if (values[0].getState()== Updateobject.CONNECTING_FALED) {
@@ -789,7 +826,7 @@ public class TrexController extends Activity {
 				btnVideoFeed.setEnabled(false); 
 				btnRemoteControl.setEnabled(false); 
 				btnFeeds.setEnabled(false);
-				toggleFailSafe.setEnabled(false);
+				toggleMissionControll.setEnabled(false);
 				
 				btnConnect.setChecked(false);
 			}

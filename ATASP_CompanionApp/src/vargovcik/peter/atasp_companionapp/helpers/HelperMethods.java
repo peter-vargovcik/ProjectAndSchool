@@ -1,5 +1,7 @@
 package vargovcik.peter.atasp_companionapp.helpers;
 
+import java.math.BigDecimal;
+
 public enum HelperMethods {
 	instance;
 	
@@ -18,4 +20,16 @@ public enum HelperMethods {
 		return (int) res;
 	}
 
+	/**
+     * Round to certain number of decimals
+     * 
+     * @param d
+     * @param decimalPlace
+     * @return
+     */
+    public float round(float d, int decimalPlace) {
+        BigDecimal bd = new BigDecimal(Float.toString(d));
+        bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
+        return bd.floatValue();
+    }
 }
