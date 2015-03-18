@@ -55,6 +55,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -62,15 +64,19 @@ import android.widget.ToggleButton;
 public class TrexController extends Activity {
 	private static final boolean DEBUG = true;
 	private static final int OBJECT_OUTPUT_STREAM_S_LOOPS_TRESHOLD = 500;
+	private static final int INITIAL_TREX_POWER_LEVEL = 30;
 	private static final String TAG = "MJPEG";
 	private Activity activity;
 
 	private Socket connection;
 	private ObjectOutputStream out;
 	private ObjectInputStream in;
-	private boolean connectionStatus = true;
-	private boolean remoteControlChangeRequested = false;
-	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll; 
+	private boolean connectionStatus, remoteControlChangeRequested, maxPlatformPowerConfirmed, 
+		newMaxPlatformPowerRequested, whatchStream, keyUp, suspending, idVideoStreamEnabled,
+		searchPaused, proximityOverride;
+	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll,toggleSearchControll,toggleProximityOverride;
+	private SeekBar platformPowerOverdriveSeekBar;
+	private Button btnPlatformPowerConfirm;
 	
 	private ImageView proximityB1,proximityB2,proximityB3,proximityB4,proximityF1,proximityF2,proximityF3,proximityF4;
 	private boolean[] proximityLaststate = new boolean[8];
@@ -79,12 +85,10 @@ public class TrexController extends Activity {
 	private Context context;
 	boolean remoteControlled = false;
 	private byte[] trexCommand = new byte[2];
-	private int motorA, motorB, trexMaxPower, pan, tilt;
+	private int motorA, motorB, trexMaxPower,trexMaxPowerChanged, pan, tilt;
 
 	private AnalogPad analogPadDrive, analogPadPanTilt;
-	private TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV;
-	boolean keyUp = false;
-	private boolean whatchStream = false;
+	private TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV,platformPowerTV;
 	private HelperMethods helperMethods;
 
 	// video Stream Stuff
@@ -104,9 +108,6 @@ public class TrexController extends Activity {
 	private int ip_ad4 = 41;
 	private int ip_port = 9000;
 	private String ip_command = "?action=stream";
-
-	private boolean suspending = false;
-	private boolean idVideoStreamEnabled = false;
 
 	final Handler handler = new Handler();
 	private LinearLayout feedsDashboard, missionControllDashboard;
@@ -149,12 +150,31 @@ public class TrexController extends Activity {
 			}
 		}
 	};
+	private OnSeekBarChangeListener platformPowerSeekBarListener = new OnSeekBarChangeListener(){
+
+		@Override
+		public void onProgressChanged(SeekBar seekBar, int progress,
+				boolean fromUser) {
+			trexMaxPowerChanged = progress;
+			platformPowerTV.setText(""+progress+" %");
+			if(trexMaxPower != trexMaxPowerChanged){
+				btnPlatformPowerConfirm.setEnabled(true);
+			}
+		}
+		@Override
+		public void onStartTrackingTouch(SeekBar seekBar) {}
+		@Override
+		public void onStopTrackingTouch(SeekBar seekBar) {}		
+	};
 	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_trex_controller);
+		
+		booleansInit();
+		
 		context = this;
 		helperMethods = HelperMethods.instance;
 		activity = this; 
@@ -173,6 +193,8 @@ public class TrexController extends Activity {
 		btnRemoteControl		= (ToggleButton) findViewById(R.id.toggtoggleControll); 
 		btnFeeds				= (ToggleButton) findViewById(R.id.toggtoggleDashBoard);
 		toggleMissionControll	= (ToggleButton) findViewById(R.id.toggleMissionControll);
+		toggleSearchControll	= (ToggleButton) findViewById(R.id.toggle_search_override_toggle);
+		toggleProximityOverride	= (ToggleButton) findViewById(R.id.toggle_proximity_override);
 		
 		analogPadDrive 		= (AnalogPad) findViewById(R.id.analogPad);
 		analogPadPanTilt 	= (AnalogPad) findViewById(R.id.analogPad2);
@@ -183,8 +205,20 @@ public class TrexController extends Activity {
 		distanceSensorTV 	= (TextView) findViewById(R.id.tv_sensor_distance);
 		temperatureSensorTV	= (TextView) findViewById(R.id.tv_sensor_temperature);
 		barPressureSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_pressure);
-		altitudeSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_altitute);		
+		altitudeSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_altitute);
+		platformPowerTV		= (TextView) findViewById(R.id.tv_platform_power);
 		
+		toggleProximityOverride.setChecked(true);
+		toggleSearchControll.setChecked(false);
+		
+		platformPowerOverdriveSeekBar = (SeekBar) findViewById(R.id.seekBar_platform_power);
+		platformPowerOverdriveSeekBar.setOnSeekBarChangeListener(platformPowerSeekBarListener);
+		
+		btnPlatformPowerConfirm = (Button) findViewById(R.id.btn_platform_powerConfirm);
+		btnPlatformPowerConfirm.setEnabled(false);
+		
+		trexMaxPower = INITIAL_TREX_POWER_LEVEL;
+		platformPowerOverdriveSeekBar.setProgress(INITIAL_TREX_POWER_LEVEL);
 		
 		analogPadDrive.setAnalogPadInterface(analogPadInterfaceDrive);
 		analogPadDrive.setBackgroundBitmap(bmpBase);
@@ -229,6 +263,7 @@ public class TrexController extends Activity {
 		analogPadDrive.setEnabled(false);
 		analogPadPanTilt.setEnabled(false);
 		toggleMissionControll.setEnabled(false);
+		toggleSearchControll.setEnabled(false);
 		
 		//demo and test override
 		btnConnect.setOnLongClickListener(new OnLongClickListener() {
@@ -242,6 +277,7 @@ public class TrexController extends Activity {
 				toggleMissionControll.setEnabled(true);
 				analogPadDrive.setEnabled(true);
 				analogPadPanTilt.setEnabled(true);
+				toggleSearchControll.setEnabled(true);
 				return false;
 			}
 		});
@@ -295,6 +331,19 @@ public class TrexController extends Activity {
 		new DoRead().execute(URL);
 	}
 
+	private void booleansInit() {
+		connectionStatus 				= true; 
+		remoteControlChangeRequested 	= false;
+		maxPlatformPowerConfirmed 		= false;
+		newMaxPlatformPowerRequested 	= false;
+		whatchStream 					= false;
+		keyUp 							= false;
+		suspending 						= false;
+		idVideoStreamEnabled 			= false;
+		searchPaused					= true;
+		proximityOverride				= false;
+	}
+
 	private void initProximityUI() {
 		proximityB1	= (ImageView) findViewById(R.id.proximity_alert_b1);
 		proximityB2	= (ImageView) findViewById(R.id.proximity_alert_b2);
@@ -322,14 +371,10 @@ public class TrexController extends Activity {
 		int m1 = m1Idle, m2 = m2Idle;
 
 		// apply limit
-		m1MaxForward = helperMethods.map(trexMaxPower, 0, 100, m1Idle,
-				m1MaxForward);
-		m1MaxReverse = helperMethods.map(trexMaxPower, 0, 100, m1Idle,
-				m1MaxReverse);
-		m2MaxForward = helperMethods.map(trexMaxPower, 0, 100, m2Idle,
-				m2MaxForward);
-		m2MaxReverse = helperMethods.map(trexMaxPower, 0, 100, m2Idle,
-				m2MaxReverse);
+		m1MaxForward = helperMethods.map(trexMaxPower, 0, 100, m1Idle, m1MaxForward);
+		m1MaxReverse = helperMethods.map(trexMaxPower, 0, 100, m1Idle, m1MaxReverse);
+		m2MaxForward = helperMethods.map(trexMaxPower, 0, 100, m2Idle, m2MaxForward);
+		m2MaxReverse = helperMethods.map(trexMaxPower, 0, 100, m2Idle, m2MaxReverse);
 
 		if (y < centerPos) {
 			m1 = helperMethods.map(y, centerPos, topMax, m1Idle, m1MaxForward);
@@ -361,6 +406,12 @@ public class TrexController extends Activity {
 		trexCommand[1] = (byte) m2;
 	}
 
+	public void setPlatformMaxPower(View view){
+		newMaxPlatformPowerRequested = true;
+		trexMaxPower = trexMaxPowerChanged;
+		btnPlatformPowerConfirm.setEnabled(false);
+	}
+	
 	public void connect(View view) {
 		boolean on = ((ToggleButton) view).isChecked();
 		if (on) {
@@ -419,12 +470,26 @@ public class TrexController extends Activity {
 		if (on) {
 			remoteControlled = true;
 			remoteControlChangeRequested = true;
-			btnRemoteControl.setEnabled(false); 
+			btnRemoteControl.setEnabled(false);
+			toggleSearchControll.setEnabled(false);
 		} else {
 			remoteControlled = false;
 			remoteControlChangeRequested = true;
-			btnRemoteControl.setEnabled(false); 
+			btnRemoteControl.setEnabled(false);
+			toggleSearchControll.setEnabled(true); 
 		}
+	}
+	
+	public void overrideProximityDetection(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		proximityOverride = on;
+		if (DEBUG){Toast.makeText(this, "proximityOverride : "+proximityOverride, Toast.LENGTH_SHORT).show();}
+	}
+	
+	public void searchInterruptControll(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		searchPaused = on;
+		if (DEBUG){Toast.makeText(this, "searchPaused : "+searchPaused, Toast.LENGTH_SHORT).show();}
 	}
 	
 	public void analogpadTest(View view){
@@ -559,13 +624,14 @@ public class TrexController extends Activity {
 //	    boolean connected = responce.isConnected(); 
 //	    boolean liveStreamEnabled = responce.isLiveStreamEnabled();
 	    boolean remoteControllEnabled = responce.isRemoteControllEnabled(); 
-//	    boolean proximitySensorsEnabled = responce.isProximitySensorsEnabled();
+	    boolean proximitySensorsEnabled = responce.isProximitySensorsEnabled();
+	    boolean searchisGo = responce.isSearchEnabled();
 //	    byte[] motorsCommand = responce.getMotorsCommand();
 //	    int[] panTiltCommand = responce.getPanTiltCommand();
 	    byte proximity = responce.getProximity();
 	    int lightSensitivity = responce.getLightSensitivity();
 	    int distance = responce.getDistance();
-//	    int motorPower = responce.getMotorPower();
+	    int motorPower = responce.getMotorPower();
 //	    int messageType = responce.getMessageType();
 	    float temperatureReading = responce.getTemperatureReading();
 //	    float humidityReading = responce.getHumidityReading();
@@ -589,11 +655,25 @@ public class TrexController extends Activity {
 			if (remoteControllEnabled) {
 				analogPadDrive.setEnabled(true);
 				analogPadPanTilt.setEnabled(true);
+				toggleSearchControll.setEnabled(false);
 			}else{
 				analogPadDrive.setEnabled(false);
 				analogPadPanTilt.setEnabled(false);
 				btnRemoteControl.setChecked(false);
+				toggleSearchControll.setEnabled(true);
 			}
+		}
+		
+		if((motorPower == trexMaxPower) && !maxPlatformPowerConfirmed){
+			maxPlatformPowerConfirmed = true;
+		}
+		
+		if(proximitySensorsEnabled && !toggleProximityOverride.isChecked()){
+			toggleProximityOverride.setChecked(proximitySensorsEnabled);
+		}
+		
+		if(searchisGo && !toggleSearchControll.isChecked()){
+			toggleSearchControll.setChecked(proximitySensorsEnabled);
 		}
 
 	}
@@ -690,16 +770,20 @@ public class TrexController extends Activity {
 	private CompanionAppData prepareRequest() {
 		CompanionAppData request = new CompanionAppData();
 		request.setMessageType(CompanionAppData.REQUEST);
-		request.setRemoteControllEnabled(remoteControlled);
-		
-		// request.setPanTiltCommand(new int[] {pan,tilt});
-		
-		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });
-		
+		request.setRemoteControllEnabled(remoteControlled);		
+		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });		
 		
 		//workarround : pan def center :100 tilt def center: 90
 		panTiltWorkArround();
 		request.setPanTiltCommand(new int[] { pan, tilt });
+		
+		if(newMaxPlatformPowerRequested){
+			request.setMotorPower(trexMaxPower);
+			newMaxPlatformPowerRequested = false;
+		}
+			
+		request.setSearchEnabled(!searchPaused);
+		request.setProximitySensorsEnabled(!proximityOverride);
 
 		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");		
 		return request;
@@ -816,6 +900,7 @@ public class TrexController extends Activity {
 				btnRemoteControl.setEnabled(true); 
 				btnFeeds.setEnabled(true);
 				toggleMissionControll.setEnabled(true);
+				toggleSearchControll.setEnabled(true);
 				
 				btnConnect.setChecked(true);
 			}else if (values[0].getState()== Updateobject.CONNECTING_FALED) {
@@ -827,7 +912,7 @@ public class TrexController extends Activity {
 				btnRemoteControl.setEnabled(false); 
 				btnFeeds.setEnabled(false);
 				toggleMissionControll.setEnabled(false);
-				
+				toggleSearchControll.setEnabled(false);
 				btnConnect.setChecked(false);
 			}
  

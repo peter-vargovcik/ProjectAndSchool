@@ -104,6 +104,16 @@
                 android:orientation="horizontal" >
 
                 <ToggleButton
+                    android:id="@+id/toggle_search_override_toggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_search_override_toggle"
+                    android:onClick="searchInterruptControll"
+                    android:textOff=""
+                    android:textOn="" />
+
+                <ToggleButton
                     android:id="@+id/toggleMissionControll"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
@@ -292,6 +302,62 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical" >
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="vertical" >
+
+                            <LinearLayout
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal" >
+
+                                <ImageView
+                                    android:layout_width="45dp"
+                                    android:layout_height="45dp"
+                                    android:layout_margin="6dp"
+                                    android:src="@drawable/power_icon" />
+
+                                <TextView
+                                    android:id="@+id/tv_platform_power"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical"
+                                    android:layout_margin="6dp"
+                                    android:text="1234"
+                                    android:textColor="@android:color/white"
+                                    android:textSize="20dp" />
+
+                                <Button
+                                    android:id="@+id/btn_platform_powerConfirm"
+                                    android:layout_width="45dp"
+                                    android:layout_height="45dp"
+                                    android:layout_margin="6dp"
+                                    android:background="@drawable/btn_confirm"
+                                    android:onClick="setPlatformMaxPower" />
+                            </LinearLayout>
+
+                            <SeekBar
+                                android:id="@+id/seekBar_platform_power"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="8dp"
+                                android:max="100"
+                                android:thumb="@drawable/seekbar_slider" />
+                        </LinearLayout>
+
+                        <ToggleButton
+                            android:id="@+id/toggle_proximity_override"
+                            android:layout_width="wrap_content"
+                            android:layout_height="60dp"
+                            android:layout_margin="10dp"
+                            android:background="@drawable/btn_proximity_override_toggle"
+                            android:onClick="overrideProximityDetection"
+                            android:textOff=""
+                            android:textOn="" />
                     </LinearLayout>
                 </ScrollView>
             </LinearLayout>

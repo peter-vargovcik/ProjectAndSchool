@@ -15,6 +15,8 @@ public interface CompanionAppInterface {
     void remoteControll(boolean isRemoteControlled);
     void remoteControlCommand(byte[] command);
     void connectionBroken();
+    void platformMaxPower(int power);
+    void ignoreProximity(boolean ignore);
 
     public void panTiltContollCommand(byte[] command);
     
