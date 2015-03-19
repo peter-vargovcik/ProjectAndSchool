@@ -18,10 +18,12 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vargovcik.peter.app.Project4;
 import vargovcik.peter.controllers.PeripheralsController;
 import vargovcik.peter.controllers.ProximityController;
 import vargovcik.peter.controllers.Sensors;
 import vargovcik.peter.interfaces.ProximityInterface;
+import vargovcik.peter.interfaces.SearchInterface;
 import vargovcik.peter.interfaces.SensorsInterface;
 
 /**
@@ -38,28 +40,32 @@ public class CompanionAppServer {
     private ObjectInputStream in;
     private boolean connectionStatus = true;
     private boolean serverIsUp = false;
+    private boolean searchIsPaused, overrideProximity;
     private Thread companionAppServerThread;
     private CompanionAppInterface appInterface;
     private CompanionAppData currentState;
-    private Sensors sensors;
-    private int lightReading,distanceReading;
-    private ProximityController proximityController;
-    private byte proximityByte;
+//    private Sensors sensors;
+//    private int lightReading,distanceReading;
+    private int maxPower;
+//    private ProximityController proximityController;
+//    private byte proximityByte;
     private float baromethricPressure, ambientTemperature, cpuTemperature,cpuVoltage;
     private double altitude;
+    private boolean stopSearchOverride = false;
+   
 
     public CompanionAppServer(CompanionAppInterface appInterface, int port) {
         this.appInterface = appInterface;
         this.port = port;
         companionAppServerThread = new Thread(companionAppServerRunnable);
         currentState = new CompanionAppData();
-        sensors = Sensors.getInstance(sensorsInterface);
-        proximityController = ProximityController.getInstance(proximityInterface);
-        proximityController.startFetching();
+//        sensors = Sensors.getInstance(sensorsInterface);
+//        proximityController = ProximityController.getInstance(proximityInterface);
+//        proximityController.startFetching();
     }
 
     public void start() {
-        sensors.startFetching();
+//        sensors.startFetching();
         bmp180SensorThread.start();
 
         try {
@@ -67,6 +73,7 @@ public class CompanionAppServer {
             System.out.println("ServerSocet created");
         } catch (IOException ex) {
             Logger.getLogger(CompanionAppServer.class.getName()).log(Level.SEVERE, null, ex);
+            appInterface.teardown();
         }
         serverIsUp = true;
         if (!companionAppServerThread.isAlive()) {
@@ -105,9 +112,11 @@ public class CompanionAppServer {
                             System.err.println("Data received in unknown format");
                         } catch (EOFException eof) {
                             System.err.println("EOFException: " + eof.getMessage());
+                            appInterface.connectionBroken();
                             connectionStatus = false;
                         } catch(SocketException e){
                             System.err.println("SocketException: " + e.getMessage());
+                            appInterface.connectionBroken();
                             connectionStatus = false;
                         }
                     } while (connectionStatus);
@@ -131,6 +140,15 @@ public class CompanionAppServer {
     private void processRequest(CompanionAppData dataRequest) {
         
         currentState.setRemoteControllEnabled(dataRequest.isRemoteControllEnabled());
+        
+        appInterface.holdSearch(dataRequest.isSearchPaused());
+//        searchIsPaused = dataRequest.isSearchEnabled();
+        
+        appInterface.platformMaxPower(dataRequest.getMotorPower());
+        maxPower = dataRequest.getMotorPower();
+        
+        appInterface.ignoreProximity(dataRequest.isProximitySensorsEnabled());
+//        overrideProximity =dataRequest.isProximitySensorsEnabled();        
 
         if (dataRequest.isRemoteControllEnabled()) {
             appInterface.remoteControll(true);
@@ -151,38 +169,61 @@ public class CompanionAppServer {
             
     }
 
+    
     private CompanionAppData prepareResponse() {
         CompanionAppData response = new CompanionAppData();
         response.setRemoteControllEnabled(currentState.isRemoteControllEnabled());
-        response.setLightSensitivity(lightReading);
-        response.setDistance(distanceReading);
-        response.setProximity(proximityByte);
+        response.setLightSensitivity(Project4.lightReading);
+        response.setDistance(Project4.distanceReading);
+        response.setProximity(Project4.proximityByte);
         response.setTemperatureReading(ambientTemperature);
         response.setAtmosphericPressure(baromethricPressure);
         response.setAltitude(altitude);
+        response.setMotorPower(maxPower);
+        
+        if(stopSearchOverride){
+            response.setSearchPaused(true);
+            stopSearchOverride = false;
+        }else{
+            response.setSearchPaused(Project4.searchIsPaused);
+        }
+        response.setProximitySensorsEnabled(Project4.overrideProximity);
+        
         return response;
     }
     
-    private SensorsInterface sensorsInterface = new SensorsInterface(){
+    private SearchInterface searchInterface = new SearchInterface(){
 
         @Override
-        public void distance(int distance) {
-            distanceReading = distance;
-        }
-
-        @Override
-        public void lightIntensity(int light) {
-            lightReading = light;
+        public void searchPaused() {
+            stopSearchOverride = true;
         }
     };
+    
+    public SearchInterface getSearchInterface(){
+        return this.searchInterface;
+    }
+    
+//    private SensorsInterface sensorsInterface = new SensorsInterface(){
+//
+//        @Override
+//        public void distance(int distance) {
+//            distanceReading = distance;
+//        }
+//
+//        @Override
+//        public void lightIntensity(int light) {
+//            lightReading = light;
+//        }
+//    };
 
-    private ProximityInterface proximityInterface = new ProximityInterface(){
-
-        @Override
-        public void onProximityUpdate(byte proximity) {
-            proximityByte = proximity;
-        }
-    };
+//    private ProximityInterface proximityInterface = new ProximityInterface(){
+//
+//        @Override
+//        public void onProximityUpdate(byte proximity) {
+//            proximityByte = proximity;
+//        }
+//    };
     
     private Thread bmp180SensorThread = new Thread(new Runnable(){
 

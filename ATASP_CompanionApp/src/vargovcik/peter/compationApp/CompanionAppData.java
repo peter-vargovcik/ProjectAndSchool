@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class CompanionAppData implements Serializable {
 
     public static int RESPONSE = 2, REQUEST = 1;
-    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, proximitySensorsEnabled, searchEnabled;
+    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, proximitySensorsEnabled, searchPaused;
     private byte[] motorsCommand;
     private int[] panTiltCommand;
     private byte proximity;
@@ -156,12 +156,12 @@ public class CompanionAppData implements Serializable {
 		this.altitude = altitude;
 	}
 
-	public boolean isSearchEnabled() {
-		return searchEnabled;
+	public boolean isSearchPaused() {
+		return searchPaused;
 	}
 
-	public void setSearchEnabled(boolean searchEnabled) {
-		this.searchEnabled = searchEnabled;
+	public void setSearchPaused(boolean searchPaused) {
+		this.searchPaused = searchPaused;
 	}
 
 	@Override
@@ -170,7 +170,7 @@ public class CompanionAppData implements Serializable {
 				+ ", connected=" + connected + ", liveStreamEnabled="
 				+ liveStreamEnabled + ", remoteControllEnabled="
 				+ remoteControllEnabled + ", proximitySensorsEnabled="
-				+ proximitySensorsEnabled + ", searchEnabled=" + searchEnabled
+				+ proximitySensorsEnabled + ", searchPaused=" + searchPaused
 				+ ", motorsCommand=" + Arrays.toString(motorsCommand)
 				+ ", panTiltCommand=" + Arrays.toString(panTiltCommand)
 				+ ", proximity=" + proximity + ", lightSensitivity="
@@ -181,7 +181,8 @@ public class CompanionAppData implements Serializable {
 				+ ", atmosphericPressure=" + atmosphericPressure
 				+ ", altitude=" + altitude + "]";
 	}
-    
+
+	
     
 
 }

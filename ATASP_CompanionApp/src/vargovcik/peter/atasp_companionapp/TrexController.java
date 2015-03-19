@@ -73,7 +73,7 @@ public class TrexController extends Activity {
 	private ObjectInputStream in;
 	private boolean connectionStatus, remoteControlChangeRequested, maxPlatformPowerConfirmed, 
 		newMaxPlatformPowerRequested, whatchStream, keyUp, suspending, idVideoStreamEnabled,
-		searchPaused, proximityOverride;
+		searchPaused,searchPauseRequested, proximityOverride,proximityOverrideRequested;
 	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll,toggleSearchControll,toggleProximityOverride;
 	private SeekBar platformPowerOverdriveSeekBar;
 	private Button btnPlatformPowerConfirm;
@@ -208,8 +208,8 @@ public class TrexController extends Activity {
 		altitudeSensorTV	= (TextView) findViewById(R.id.tv_sensor_bar_altitute);
 		platformPowerTV		= (TextView) findViewById(R.id.tv_platform_power);
 		
-		toggleProximityOverride.setChecked(true);
-		toggleSearchControll.setChecked(false);
+		toggleProximityOverride.setChecked(false);
+		toggleSearchControll.setChecked(true);
 		
 		platformPowerOverdriveSeekBar = (SeekBar) findViewById(R.id.seekBar_platform_power);
 		platformPowerOverdriveSeekBar.setOnSeekBarChangeListener(platformPowerSeekBarListener);
@@ -342,6 +342,8 @@ public class TrexController extends Activity {
 		idVideoStreamEnabled 			= false;
 		searchPaused					= true;
 		proximityOverride				= false;
+		searchPauseRequested			= false;
+		proximityOverrideRequested		= false;
 	}
 
 	private void initProximityUI() {
@@ -410,6 +412,7 @@ public class TrexController extends Activity {
 		newMaxPlatformPowerRequested = true;
 		trexMaxPower = trexMaxPowerChanged;
 		btnPlatformPowerConfirm.setEnabled(false);
+		
 	}
 	
 	public void connect(View view) {
@@ -482,13 +485,17 @@ public class TrexController extends Activity {
 	
 	public void overrideProximityDetection(View view){
 		boolean on = ((ToggleButton) view).isChecked();
-		proximityOverride = on;
+		proximityOverrideRequested = true;
+		proximityOverride = !on;
+		toggleProximityOverride.setEnabled(false);
 		if (DEBUG){Toast.makeText(this, "proximityOverride : "+proximityOverride, Toast.LENGTH_SHORT).show();}
 	}
 	
 	public void searchInterruptControll(View view){
 		boolean on = ((ToggleButton) view).isChecked();
+		searchPauseRequested = true;
 		searchPaused = on;
+		toggleSearchControll.setEnabled(false);
 		if (DEBUG){Toast.makeText(this, "searchPaused : "+searchPaused, Toast.LENGTH_SHORT).show();}
 	}
 	
@@ -618,14 +625,44 @@ public class TrexController extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	private CompanionAppData prepareRequest() {
+		CompanionAppData request = new CompanionAppData();
+		request.setMessageType(CompanionAppData.REQUEST);
+		request.setRemoteControllEnabled(remoteControlled);		
+		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });		
+		
+		//workarround : pan def center :100 tilt def center: 90
+		panTiltWorkArround();
+		request.setPanTiltCommand(new int[] { pan, tilt });
+		request.setMotorPower(trexMaxPower);
+		if(newMaxPlatformPowerRequested){
+			Log.d("DD","newMaxPlatformPowerRequested: "+trexMaxPower);			
+			newMaxPlatformPowerRequested = false;
+		}
+		
+		request.setSearchPaused(searchPaused);
+		if(searchPauseRequested){
+			searchPauseRequested = false;
+		}
+		
+		request.setProximitySensorsEnabled(proximityOverride);
+		if(proximityOverrideRequested){
+			proximityOverrideRequested = false;
+		}
 
+		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");		
+		return request;
+	}
+
+	private boolean testBool =false;
 	private void processResponce(CompanionAppData responce) {
 //	    boolean connectionOpen = responce.isConnected();
 //	    boolean connected = responce.isConnected(); 
 //	    boolean liveStreamEnabled = responce.isLiveStreamEnabled();
 	    boolean remoteControllEnabled = responce.isRemoteControllEnabled(); 
 	    boolean proximitySensorsEnabled = responce.isProximitySensorsEnabled();
-	    boolean searchisGo = responce.isSearchEnabled();
+	    boolean searchIsPaused = responce.isSearchPaused();
 //	    byte[] motorsCommand = responce.getMotorsCommand();
 //	    int[] panTiltCommand = responce.getPanTiltCommand();
 	    byte proximity = responce.getProximity();
@@ -652,6 +689,7 @@ public class TrexController extends Activity {
 		if(remoteControlChangeRequested){
 			btnRemoteControl.setEnabled(true);
 			btnRemoteControl.setChecked(remoteControllEnabled);
+			
 			if (remoteControllEnabled) {
 				analogPadDrive.setEnabled(true);
 				analogPadPanTilt.setEnabled(true);
@@ -671,10 +709,34 @@ public class TrexController extends Activity {
 		if(proximitySensorsEnabled && !toggleProximityOverride.isChecked()){
 			toggleProximityOverride.setChecked(proximitySensorsEnabled);
 		}
-		
-		if(searchisGo && !toggleSearchControll.isChecked()){
-			toggleSearchControll.setChecked(proximitySensorsEnabled);
+		if(!proximityOverrideRequested && !toggleProximityOverride.isEnabled()){
+			proximityOverride = !proximitySensorsEnabled;
+			toggleProximityOverride.setChecked(proximityOverride);
+			toggleProximityOverride.setEnabled(true);
 		}
+		
+			
+		
+		if(testBool){
+			searchPaused = searchIsPaused;
+			toggleSearchControll.setChecked(searchPaused);			
+			testBool = false;
+		}
+		
+		if(searchIsPaused !=toggleSearchControll.isChecked()){
+			testBool =true;
+		}
+		
+		textView.setText("searchIsPaused: "+searchIsPaused);
+		if(!searchPauseRequested && !toggleSearchControll.isEnabled()){
+			searchPaused = searchIsPaused;
+			toggleSearchControll.setChecked(searchPaused);
+			toggleSearchControll.setEnabled(true);
+		}
+		
+//		if(searchIsGo && !toggleSearchControll.isChecked()){
+//			toggleSearchControll.setChecked(proximitySensorsEnabled);
+//		}
 
 	}
 	
@@ -765,28 +827,6 @@ public class TrexController extends Activity {
 			}
 		}
 		return array;
-	}
-
-	private CompanionAppData prepareRequest() {
-		CompanionAppData request = new CompanionAppData();
-		request.setMessageType(CompanionAppData.REQUEST);
-		request.setRemoteControllEnabled(remoteControlled);		
-		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });		
-		
-		//workarround : pan def center :100 tilt def center: 90
-		panTiltWorkArround();
-		request.setPanTiltCommand(new int[] { pan, tilt });
-		
-		if(newMaxPlatformPowerRequested){
-			request.setMotorPower(trexMaxPower);
-			newMaxPlatformPowerRequested = false;
-		}
-			
-		request.setSearchEnabled(!searchPaused);
-		request.setProximitySensorsEnabled(!proximityOverride);
-
-		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");		
-		return request;
 	}
 
 	private void panTiltWorkArround() {

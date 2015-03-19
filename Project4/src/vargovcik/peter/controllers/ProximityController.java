@@ -107,11 +107,51 @@ public class ProximityController {
         int valueConverted = value & 0xFF;
         return valueConverted;
     }
+    
+    public static  int obstacleDetected(byte in){
+        int valueConverted = in & 0xFF;
+        return valueConverted;
+    }
 
     public boolean[] getProximityArray() throws IOException {
 
         boolean[] array = new boolean[8];
         int proximityValue = obstacleDetected();
+        while (proximityValue != 0) {
+
+            if (proximityValue % 128 == 0) {
+                array[0] = true;
+                proximityValue -= 128;
+            } else if (proximityValue % 64 == 0) {
+                array[1] = true;
+                proximityValue -= 64;
+            } else if (proximityValue % 32 == 0) {
+                array[2] = true;
+                proximityValue -= 32;
+            } else if (proximityValue % 16 == 0) {
+                array[3] = true;
+                proximityValue -= 16;
+            } else if (proximityValue % 8 == 0) {
+                array[4] = true;
+                proximityValue -= 8;
+            } else if (proximityValue % 4 == 0) {
+                array[5] = true;
+                proximityValue -= 4;
+            } else if (proximityValue % 2 == 0) {
+                array[6] = true;
+                proximityValue -= 2;
+            } else {
+                array[7] = true;
+                proximityValue -= 1;
+            }
+        }
+
+        return array;
+    }
+    public static boolean[] getProximityArray(byte in) {
+
+        boolean[] array = new boolean[8];
+        int proximityValue = obstacleDetected(in);
         while (proximityValue != 0) {
 
             if (proximityValue % 128 == 0) {

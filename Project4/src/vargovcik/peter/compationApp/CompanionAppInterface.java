@@ -17,7 +17,8 @@ public interface CompanionAppInterface {
     void connectionBroken();
     void platformMaxPower(int power);
     void ignoreProximity(boolean ignore);
-
+    void holdSearch(boolean searchOnHold);
     public void panTiltContollCommand(byte[] command);
+    public void teardown();
     
 }
