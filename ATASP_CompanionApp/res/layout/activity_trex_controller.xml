@@ -349,15 +349,47 @@
                                 android:thumb="@drawable/seekbar_slider" />
                         </LinearLayout>
 
-                        <ToggleButton
-                            android:id="@+id/toggle_proximity_override"
+                        <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="60dp"
-                            android:layout_margin="10dp"
-                            android:background="@drawable/btn_proximity_override_toggle"
-                            android:onClick="overrideProximityDetection"
-                            android:textOff=""
-                            android:textOn="" />
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal" >
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical" >
+
+                                <ToggleButton
+                                    android:id="@+id/toggle_proximity_override"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="60dp"
+                                    android:layout_margin="10dp"
+                                    android:background="@drawable/btn_proximity_override_toggle"
+                                    android:onClick="overrideProximityDetection"
+                                    android:textOff=""
+                                    android:textOn="" />
+
+                                <ToggleButton
+                                    android:id="@+id/toggle_search_mode_pingpong"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="60dp"
+                                    android:layout_margin="10dp"
+                                    android:background="@drawable/btn_search_mode_pingpong_toggle"
+                                    android:onClick="setPingPongSearchMode"
+                                    android:textOff=""
+                                    android:textOn="" />
+                            </LinearLayout>
+
+                            <ToggleButton
+                                android:id="@+id/toggle_search_mode_fireman"
+                                android:layout_width="60dp"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="10dp"
+                                android:background="@drawable/btn_search_mode_fireman_toggle"
+                                android:onClick="setFiremanSearchMode"
+                                android:textOff=""
+                                android:textOn="" />
+                        </LinearLayout>
                     </LinearLayout>
                 </ScrollView>
             </LinearLayout>
