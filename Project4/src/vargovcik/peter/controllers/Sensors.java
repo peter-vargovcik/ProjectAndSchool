@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vargovcik.peter.interfaces.SensorsInterface;
+import vargovcik.peter.locks.Locks;
 
 /**
  *
@@ -63,7 +64,9 @@ public class Sensors {
         public void run() {
             while(fetching){
                 try {
-                    int r = device.read(bytes,0, bytes.length);
+                    synchronized(new Locks().proximityFetch){
+                        int r = device.read(bytes,0, bytes.length);
+                    }
                     
                     int lightSensor = ((bytes[1] & 0xff) << 8) | (bytes[2] & 0xff);
                     int distanceSensor = ((bytes[3] & 0xff) << 8) | (bytes[4] & 0xff);

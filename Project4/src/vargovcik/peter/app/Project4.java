@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vargovcik.peter.compationApp.CompanionAppInterface;
 import vargovcik.peter.compationApp.CompanionAppServer;
+import vargovcik.peter.compationApp.SearchMode;
 import vargovcik.peter.controllers.GPIOController;
 import vargovcik.peter.controllers.PeripheralsController;
 import vargovcik.peter.controllers.ProximityController;
@@ -35,18 +36,38 @@ public class Project4 {
     private PeripheralsController peripheralsController;
     private GPIOController gpioController;
     
-    public static boolean inSearch = true, operatorInControll = false, overrideProximity = false, searchIsPaused = true;
-    public static byte proximityByte;
-    public static int lightReading,distanceReading;
+    public static boolean 
+            inSearch = true, 
+            operatorInControll = false, 
+            overrideProximity = false, 
+            searchIsPaused = true,
+            theMainLoopIsRunning = true, 
+            movingForward = true, 
+            wallNotPresent = false,
+            headLightIsOn = false,
+            rgbRedLedIsOn = false,
+            rgbGreenLedIsOn = false,
+            rgbBlueLedIsOn = false;
     
-    private boolean theMainLoopIsRunning = true, movingForward = true;
+    public static byte proximityByte ,rigthHandProximityByte;
+    public static int lightReading,distanceReading;
+    public static SearchMode searchMode;
+    
+    private boolean
+            remoteControlledMovingForward =true,
+            remoteControlledTurningLeft =true;
+    private byte[] remoteControlledommand = new byte[2];
+    
+    private static long NO_RESPONCE_TRESHOLD = 1000;
     private long currentMilis = System.currentTimeMillis();
+    public static long lastRequestReceivedInMilis = System.currentTimeMillis();
+    
     private Thread companionAppServerThread,theLoop;
     private ProximityController proximityController;
     private Sensors sensors;
-     private SearchInterface searchInterface;
+    private SearchInterface searchInterface;
     
-    private int maxPower;
+    private int maxPower, tempCount =0;
     
 
     public Project4() {
@@ -92,10 +113,21 @@ public class Project4 {
     }
 
     private void initAll() {
+        searchMode = SearchMode.PING_PONG;        
+        gpioController = GPIOController.instance;
+        gpioController.setSerialRelay(PinState.LOW);
+        
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
         trex = Trex.instance;
                 
-        peripheralsController = PeripheralsController.instance;
-        gpioController = GPIOController.instance;
+        peripheralsController = PeripheralsController.getInstance(proximityInterface);
+        peripheralsController.startFetching();
         
         proximityController = ProximityController.getInstance(proximityInterface);
         proximityController.startFetching();
@@ -161,6 +193,11 @@ public class Project4 {
         public void onProximityUpdate(byte proximity) {
             proximityByte = proximity;
         }
+
+        @Override
+        public void onRightHandProximityUpdate(byte proximity) {
+            rigthHandProximityByte = proximity;
+        }
     };
 
     private CompanionAppInterface companionAppInterface = new CompanionAppInterface() {
@@ -187,8 +224,25 @@ public class Project4 {
         @Override
         public void remoteControlCommand(byte[] command) {
             if (command != null && operatorInControll) {
+                tempCount++;
 //                System.out.println("controled");
-                trex.trexExecute(command);
+                int motorLeft   = command[0] & 0xFF;
+                int motorRight  = command[1] & 0xFF;
+                
+//                if(tempCount % 10 == 0){
+//                    System.out.println("motorLeft:"+motorLeft+", motorRight:"+motorRight);
+//                }
+                if(motorLeft> 64 && motorRight> 192){
+                    remoteControlledMovingForward = true;
+                }
+                else if(motorLeft< 64 && motorRight< 192){
+                    remoteControlledMovingForward = false;
+                }
+                
+//                if(tempCount % 10 == 0){
+//                    System.out.println("remoteControlledMovingForward:"+remoteControlledMovingForward);
+//                }
+                remoteControlledommand = command;
             }
         }
 
@@ -223,9 +277,9 @@ public class Project4 {
         @Override
         public void ignoreProximity(boolean ignore) {  
             if(overrideProximity != ignore){
-                overrideProximity = ignore;
+                overrideProximity = ignore;                
                 System.out.println("overrideProximity: " + ignore);
-            }            
+            }                   
         }
 
         @Override
@@ -252,7 +306,45 @@ public class Project4 {
                 Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
             }
             // turn off the lights
-            gpioController.setPin1(PinState.LOW);
+            gpioController.setGreenLed(PinState.LOW);            
+            gpioController.setSerialRelay(PinState.HIGH);
+        }
+
+        @Override
+        public void setSearchMode(SearchMode searchModeCommand) {
+            if(!searchModeCommand.equals(searchMode)){
+                System.out.println("Search mode: "+searchModeCommand.toString());
+            }
+            searchMode = searchModeCommand;
+        }
+
+        @Override
+        public void headLight(boolean on) {
+            if(headLightIsOn != on){
+                gpioController.setHeadlight((on)?PinState.LOW:PinState.HIGH);
+                headLightIsOn = on;
+                System.out.println("Headlight on: "+headLightIsOn);
+            }
+            
+        }
+
+        @Override
+        public void rgbSet(boolean redIsOn, boolean greenIsOn, boolean blueIsOn) {
+            //rgbRedLedIsOn, rgbGreenLedIsOn, rgbBlueLedIsOn 
+            if(rgbRedLedIsOn != redIsOn){
+                gpioController.setRGBRed((redIsOn)?PinState.LOW:PinState.HIGH);
+                rgbRedLedIsOn = redIsOn;
+            }
+            
+            if(rgbGreenLedIsOn != greenIsOn){
+                gpioController.setRGBGreen((greenIsOn)?PinState.LOW:PinState.HIGH);
+                rgbGreenLedIsOn = greenIsOn;
+            }
+            
+            if(rgbBlueLedIsOn != blueIsOn){
+                gpioController.setRGBBlue((blueIsOn)?PinState.LOW:PinState.HIGH);
+                rgbBlueLedIsOn = blueIsOn;
+            }            
         }
     };
 
@@ -271,7 +363,7 @@ public class Project4 {
             searchInterface = companionAppServer.getSearchInterface();
             companionAppServer.start();
             System.out.println("Thread Executed");
-            gpioController.setPin1(PinState.HIGH);
+            gpioController.setGreenLed(PinState.HIGH);
         }
     };
 
@@ -286,48 +378,152 @@ public class Project4 {
             boolean[] proximityArray = new  boolean[8];
             
             while(theMainLoopIsRunning){
+                currentMilis = System.currentTimeMillis();
+                
                 if(operatorInControll){
-                    gpioController.setPin2(PinState.LOW);
+                    gpioController.setRGBGreen(PinState.LOW);
                 }else{
-                    gpioController.setPin2(PinState.HIGH);
+                    gpioController.setRGBGreen(PinState.HIGH);
                 }
                 if(searchIsPaused){
-                    gpioController.setPin3(PinState.LOW);
+                    gpioController.setRedLed(PinState.HIGH);
                 }else{
-                    gpioController.setPin3(PinState.HIGH);
+                    gpioController.setRedLed(PinState.LOW);
                 }
+                
                 //  The Loop Body
-                
-                if(!operatorInControll && inSearch && !searchIsPaused){
+                if(!operatorInControll && inSearch && !searchIsPaused && (searchMode !=null)){
+                    gpioController.startRGBEmergency();
+                     //PingPong Search Mode
+                    if(searchMode.equals(SearchMode.PING_PONG)){
                     
-                    trex.forward(maxPower);
+                        trex.forward(maxPower);
+                        
+                        if (lightReading > 700) {
+                            fireFound(lightReading);
+                        }
+                        obstacleDetected = proximityController.obstacleDetected(proximityByte);
 
-                    
-                    if (lightReading > 700) {
-                        fireFound(lightReading);
+                        if (obstacleDetected != 0) {
+
+                            proximityArray = proximityController.getProximityArray(proximityByte);
+
+                            if(movingForward &&(proximityArray[1] && proximityArray[2])){
+                                trex.rightTurn(180);
+                            }
+
+                            if( movingForward && (proximityArray[0] || proximityArray[1])){
+                                trex.rightTurn(45);
+                            }
+
+                            if( movingForward && (proximityArray[2] || proximityArray[3])){
+                                trex.leftTurn(45);
+                            }
+                        }
+                    }
+                    //FireMan Search Mode
+                    if(searchMode.equals(SearchMode.FIREMAN)){                        
+                        // go forward 
+                        trex.forward(maxPower);
+                        // check the light level
+                        if (lightReading > 700) {
+                            fireFound(lightReading);
+                        }
+                        //check obstacles in front
+                        obstacleDetected = proximityController.obstacleDetected(proximityByte);
+
+                        if (obstacleDetected != 0) {
+                            // obstacle detected - deal with it
+                            proximityArray = proximityController.getProximityArray(proximityByte);
+
+                            if(movingForward &&(proximityArray[1] && proximityArray[2])){
+                                trex.leftTurn(90);
+                            }
+
+                            if( movingForward && (proximityArray[0] || proximityArray[1])){
+                                trex.rightTurn(45);
+                            }
+
+                            if( movingForward && (proximityArray[2] || proximityArray[3])){
+                                trex.leftTurn(45);
+                            }
+                        }
+                        
+                        //check right side if wall is present
+                        if(!PeripheralsController.rightSideObstacleDetected(rigthHandProximityByte) && !wallNotPresent){
+                            // flag that we are searching for wall.
+                            wallNotPresent = true;
+                            //if wall is not present and front of the platform is clear make 90 degree turn to right
+                            trex.rightTurn(90);
+                            
+                        }else if(PeripheralsController.rightSideObstacleDetected(rigthHandProximityByte)){
+                            wallNotPresent = false;
+                        }                        
+                                                                    
+                        
+                        // while flag is up:
+                            // drive forward till front proximity detects wall
+                            // when wall found do 90 degree turn to left
+                        
+                            //check right side if wall is present
+                        
+                        //remove flag
                     }
                     
-                    obstacleDetected = proximityController.obstacleDetected(proximityByte);
+                }
+                else if(operatorInControll){
+                    gpioController.stopRGBEmergency();
+                    // operator is in controll
+                    
+                    if((lastRequestReceivedInMilis - currentMilis) > NO_RESPONCE_TRESHOLD ){
+                        trex.stop();
+                        System.out.println("No Reqest, Trex Stop");
+                    }
+                    
+                    if(!overrideProximity){
+                        obstacleDetected = proximityController.obstacleDetected(proximityByte);
 
-                    if (obstacleDetected != 0) {
-                        
-                        proximityArray = proximityController.getProximityArray(proximityByte);
+                        if (obstacleDetected != 0) {
+
+                            proximityArray = proximityController.getProximityArray(proximityByte);
+
+                            if(remoteControlledMovingForward &&(proximityArray[1] && proximityArray[2])){
+                                trex.stop();
+                            }
+
+                            if( remoteControlledMovingForward && (proximityArray[0] || proximityArray[1])){
+                                trex.stop();
+                            }
+
+                            if( remoteControlledMovingForward && (proximityArray[2] || proximityArray[3])){
+                                trex.stop();
+                            }
                             
-                        if(movingForward &&(proximityArray[1] && proximityArray[2])){
-                            trex.rightTurn(180);
-                        }
+                             if(!remoteControlledMovingForward &&(proximityArray[5] && proximityArray[6])){
+                                trex.stop();
+                            }
 
-                        if( movingForward && (proximityArray[0] || proximityArray[1])){
-                            trex.rightTurn(45);
-                        }
+                            if( !remoteControlledMovingForward && (proximityArray[4] || proximityArray[5])){
+                                trex.stop();
+                            }
 
-                        if( movingForward && (proximityArray[2] || proximityArray[3])){
-                            trex.leftTurn(45);
+                            if( !remoteControlledMovingForward && (proximityArray[6] || proximityArray[7])){
+                                trex.stop();
+                            }
+                        }
+                        else{
+                            trex.trexExecute(remoteControlledommand);
+                        }
+                    }
+                    else{
+                        if(remoteControlledommand != null){
+                            trex.trexExecute(remoteControlledommand);
+                            //System.out.println("["+remoteControlledommand[0]+","+remoteControlledommand[1]+"]");
                         }
                     }
                     
                 }
-                
+                gpioController.stopRGBEmergency();
             }
         }
     };

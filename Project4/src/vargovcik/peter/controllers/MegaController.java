@@ -52,7 +52,7 @@ public class MegaController {
 //            System.out.println(" OK!!!");
     }
 
-    public void setPanTilt(byte[] command) {
+    public synchronized void setPanTilt(byte[] command) {
         try {
             int seepTime = 15;
             mega.write((byte) 4);

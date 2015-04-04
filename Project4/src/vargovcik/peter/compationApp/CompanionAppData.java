@@ -15,13 +15,16 @@ import java.util.Arrays;
 public class CompanionAppData implements Serializable {
 
     public static int RESPONSE = 2, REQUEST = 1;
-    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, proximitySensorsEnabled, searchPaused;
+    private boolean connectionOpen, connected, liveStreamEnabled, remoteControllEnabled, 
+    		proximitySensorsEnabled, searchPaused, headLightOn,rightHandProximityTriggered;
+    private boolean[] rgbLED;
     private byte[] motorsCommand;
     private int[] panTiltCommand;
     private byte proximity;
     private int lightSensitivity, motorPower, messageType,distance;
     private float temperatureReading, humidityReading, atmosphericPressure;
-    double altitude;
+    private double altitude;
+    private SearchMode searchMode;
 
     public CompanionAppData() {
         super();
@@ -164,6 +167,38 @@ public class CompanionAppData implements Serializable {
 		this.searchPaused = searchPaused;
 	}
 
+	public SearchMode getSearchMode() {
+		return searchMode;
+	}
+
+	public void setSearchMode(SearchMode searchMode) {
+		this.searchMode = searchMode;
+	}
+
+	public boolean isHeadLightOn() {
+		return headLightOn;
+	}
+
+	public void setHeadLightOn(boolean headLightOn) {
+		this.headLightOn = headLightOn;
+	}
+
+	public boolean[] getRgbLED() {
+		return rgbLED;
+	}
+
+	public void setRgbLED(boolean[] rgbLED) {
+		this.rgbLED = rgbLED;
+	}
+
+	public boolean isRightHandProximityTriggered() {
+		return rightHandProximityTriggered;
+	}
+
+	public void setRightHandProximityTriggered(boolean rightHandProximityTriggered) {
+		this.rightHandProximityTriggered = rightHandProximityTriggered;
+	}
+
 	@Override
 	public String toString() {
 		return "CompanionAppData [connectionOpen=" + connectionOpen
@@ -171,18 +206,23 @@ public class CompanionAppData implements Serializable {
 				+ liveStreamEnabled + ", remoteControllEnabled="
 				+ remoteControllEnabled + ", proximitySensorsEnabled="
 				+ proximitySensorsEnabled + ", searchPaused=" + searchPaused
-				+ ", motorsCommand=" + Arrays.toString(motorsCommand)
-				+ ", panTiltCommand=" + Arrays.toString(panTiltCommand)
-				+ ", proximity=" + proximity + ", lightSensitivity="
-				+ lightSensitivity + ", motorPower=" + motorPower
-				+ ", messageType=" + messageType + ", distance=" + distance
-				+ ", temperatureReading=" + temperatureReading
+				+ ", headLightOn=" + headLightOn
+				+ ", rightHandProximityTriggered="
+				+ rightHandProximityTriggered + ", rgbLED="
+				+ Arrays.toString(rgbLED) + ", motorsCommand="
+				+ Arrays.toString(motorsCommand) + ", panTiltCommand="
+				+ Arrays.toString(panTiltCommand) + ", proximity=" + proximity
+				+ ", lightSensitivity=" + lightSensitivity + ", motorPower="
+				+ motorPower + ", messageType=" + messageType + ", distance="
+				+ distance + ", temperatureReading=" + temperatureReading
 				+ ", humidityReading=" + humidityReading
 				+ ", atmosphericPressure=" + atmosphericPressure
-				+ ", altitude=" + altitude + "]";
+				+ ", altitude=" + altitude + ", searchMode=" + searchMode + "]";
 	}
 
 	
-    
+
+	
+
 
 }

@@ -97,12 +97,12 @@ public class ProximityController {
         return ((value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin);
     }
 
-    public byte getProximityReading() throws IOException {
+    public  byte getProximityReading() throws IOException {
         int val = obstacleDetected();
         return (byte) (val & 0xFF);
     }
 
-    public int obstacleDetected() throws IOException {
+    public synchronized int obstacleDetected() throws IOException {
         int value =  myDevice.read();
         int valueConverted = value & 0xFF;
         return valueConverted;

@@ -3,13 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package vargovcik.peter.interfaces;
+package vargovcik.peter.locks;
 
 /**
  *
  * @author Peter Vargovcik
  */
-public interface ProximityInterface {
-    void onProximityUpdate(byte proximity);
-    void onRightHandProximityUpdate(byte proximity);
+public class Locks {
+    public Object proximityFetch = new Object();
 }

@@ -9,6 +9,7 @@ import adafruiti2c.sensor.AdafruitBMP180;
 import com.pi4j.system.SystemInfo;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -107,7 +108,18 @@ public class CompanionAppServer {
 
                             out.writeObject(dataResponse);
                             out.flush();
+                            
+                            
+//                            try {
+//                                    Thread.sleep(15);
+//                            } catch (InterruptedException e) {
+//                                    // TODO Auto-generated catch block
+//                                    e.printStackTrace();
+//                            }
 
+                        }catch (InvalidClassException e){
+                            System.err.println("InvalidClassException: "+e.getLocalizedMessage());
+                            connectionStatus = false;
                         } catch (ClassNotFoundException classnot) {
                             System.err.println("Data received in unknown format");
                         } catch (EOFException eof) {
@@ -138,6 +150,8 @@ public class CompanionAppServer {
     };
 
     private void processRequest(CompanionAppData dataRequest) {
+        //reset request timer
+        Project4.lastRequestReceivedInMilis = System.currentTimeMillis();
         
         currentState.setRemoteControllEnabled(dataRequest.isRemoteControllEnabled());
         
@@ -148,7 +162,8 @@ public class CompanionAppServer {
         maxPower = dataRequest.getMotorPower();
         
         appInterface.ignoreProximity(dataRequest.isProximitySensorsEnabled());
-//        overrideProximity =dataRequest.isProximitySensorsEnabled();        
+//        overrideProximity =dataRequest.isProximitySensorsEnabled(); 
+        appInterface.setSearchMode(dataRequest.getSearchMode());
 
         if (dataRequest.isRemoteControllEnabled()) {
             appInterface.remoteControll(true);
@@ -166,7 +181,8 @@ public class CompanionAppServer {
             command[1] = (byte) dataRequest.getPanTiltCommand()[1];
 //            appInterface.panTiltContollCommand(command);
         }
-            
+          
+        appInterface.headLight(dataRequest.isHeadLightOn());
     }
 
     
@@ -180,6 +196,8 @@ public class CompanionAppServer {
         response.setAtmosphericPressure(baromethricPressure);
         response.setAltitude(altitude);
         response.setMotorPower(maxPower);
+        response.setSearchMode(Project4.searchMode);
+        response.setHeadLightOn(Project4.headLightIsOn);
         
         if(stopSearchOverride){
             response.setSearchPaused(true);

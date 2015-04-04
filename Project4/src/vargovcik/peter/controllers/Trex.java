@@ -43,7 +43,7 @@ public enum Trex {
         return ((value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin);
     }
 
-    private void executeCommand(byte[] command, int duration) {
+    private synchronized void executeCommand(byte[] command, int duration) {
         serial.write(command);
         try {
             Thread.sleep(duration);
@@ -53,7 +53,7 @@ public enum Trex {
         stop();
     }
 
-    private void executeCommand(byte[] command) {
+    private synchronized void executeCommand(byte[] command) {
         serial.write(command);
     }
 
@@ -101,7 +101,7 @@ public enum Trex {
         executeCommand(command, duration);
     }
 
-    public void stop() {
+    public synchronized void stop() {
         byte[] command = {(byte) 0};
         serial.write(command);
     }
