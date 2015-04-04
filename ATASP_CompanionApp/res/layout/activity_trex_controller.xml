@@ -68,6 +68,17 @@
                     android:onClick="toggleControll"
                     android:textOff=""
                     android:textOn="" />
+                
+                <ToggleButton
+                    android:id="@+id/toggleHeadLight"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_headlight_toggle"
+                    android:onClick="toggleHeadLight"
+                    android:textOff=""
+                    android:textOn="" />
+                
             </LinearLayout>
 
             <LinearLayout
@@ -235,7 +246,7 @@
                                 android:layout_width="40dp"
                                 android:layout_height="40dp"
                                 android:layout_margin="6dp"
-                                android:src="@drawable/pressure_ico" />
+                                android:src="@drawable/pressure_icon" />
 
                             <TextView
                                 android:id="@+id/tv_sensor_bar_pressure"
@@ -271,6 +282,23 @@
 
                             <TextView
                                 android:id="@+id/textView1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_margin="6dp"
+                                android:text="1234"
+                                android:textColor="@android:color/white"
+                                android:textSize="18dp" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/layout_border_sensor_item"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/textView2"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_vertical"
@@ -350,8 +378,10 @@
                         </LinearLayout>
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:background="@drawable/layout_border_sensor_item"
                             android:orientation="horizontal" >
 
                             <LinearLayout
@@ -363,7 +393,7 @@
                                     android:id="@+id/toggle_proximity_override"
                                     android:layout_width="wrap_content"
                                     android:layout_height="60dp"
-                                    android:layout_margin="10dp"
+                                    android:layout_margin="4dp"
                                     android:background="@drawable/btn_proximity_override_toggle"
                                     android:onClick="overrideProximityDetection"
                                     android:textOff=""
@@ -373,7 +403,7 @@
                                     android:id="@+id/toggle_search_mode_pingpong"
                                     android:layout_width="wrap_content"
                                     android:layout_height="60dp"
-                                    android:layout_margin="10dp"
+                                    android:layout_margin="4dp"
                                     android:background="@drawable/btn_search_mode_pingpong_toggle"
                                     android:onClick="setPingPongSearchMode"
                                     android:textOff=""
@@ -382,9 +412,9 @@
 
                             <ToggleButton
                                 android:id="@+id/toggle_search_mode_fireman"
-                                android:layout_width="60dp"
-                                android:layout_height="wrap_content"
-                                android:layout_margin="10dp"
+                                android:layout_width="65dp"
+                                android:layout_height="126dp"
+                                android:layout_margin="5dp"
                                 android:background="@drawable/btn_search_mode_fireman_toggle"
                                 android:onClick="setFiremanSearchMode"
                                 android:textOff=""

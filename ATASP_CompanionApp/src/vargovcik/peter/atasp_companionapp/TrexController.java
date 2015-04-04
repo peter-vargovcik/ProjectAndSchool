@@ -31,6 +31,7 @@ import vargovcik.peter.atasp_companionapp.helpers.Updateobject;
 import vargovcik.peter.atasp_companionapp.uiaddons.AnalogPad;
 import vargovcik.peter.atasp_companionapp.uiaddons.AnalogPadInterface;
 import vargovcik.peter.compationApp.CompanionAppData;
+import vargovcik.peter.compationApp.SearchMode;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.content.Context;
@@ -73,8 +74,10 @@ public class TrexController extends Activity {
 	private ObjectInputStream in;
 	private boolean connectionStatus, remoteControlChangeRequested, maxPlatformPowerConfirmed, 
 		newMaxPlatformPowerRequested, whatchStream, keyUp, suspending, idVideoStreamEnabled,
-		searchPaused,searchPauseRequested, proximityOverride,proximityOverrideRequested;
-	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll,toggleSearchControll,toggleProximityOverride;
+		searchPaused,searchPauseRequested, proximityOverride,proximityOverrideRequested,
+		headLightIsOn, headLightStateChangeRequested;
+	private ToggleButton btnConnect, btnVideoFeed, btnRemoteControl, btnFeeds,toggleMissionControll,
+		toggleSearchControll,toggleProximityOverride,btnPingpongSearchMode,btnFiremanSearchMode,btnHeadLight;
 	private SeekBar platformPowerOverdriveSeekBar;
 	private Button btnPlatformPowerConfirm;
 	
@@ -88,8 +91,9 @@ public class TrexController extends Activity {
 	private int motorA, motorB, trexMaxPower,trexMaxPowerChanged, pan, tilt;
 
 	private AnalogPad analogPadDrive, analogPadPanTilt;
-	private TextView textView,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV,platformPowerTV;
+	private TextView textView,textView2,lightSensorTV,distanceSensorTV,temperatureSensorTV,barPressureSensorTV,altitudeSensorTV,platformPowerTV;
 	private HelperMethods helperMethods;
+	private SearchMode searchMode;
 
 	// video Stream Stuff
 
@@ -195,12 +199,16 @@ public class TrexController extends Activity {
 		toggleMissionControll	= (ToggleButton) findViewById(R.id.toggleMissionControll);
 		toggleSearchControll	= (ToggleButton) findViewById(R.id.toggle_search_override_toggle);
 		toggleProximityOverride	= (ToggleButton) findViewById(R.id.toggle_proximity_override);
+		btnPingpongSearchMode	= (ToggleButton) findViewById(R.id.toggle_search_mode_pingpong);
+		btnFiremanSearchMode	= (ToggleButton) findViewById(R.id.toggle_search_mode_fireman);
+		btnHeadLight			= (ToggleButton) findViewById(R.id.toggleHeadLight);
 		
 		analogPadDrive 		= (AnalogPad) findViewById(R.id.analogPad);
 		analogPadPanTilt 	= (AnalogPad) findViewById(R.id.analogPad2);
 		
 
 		textView 			= (TextView) findViewById(R.id.textView1);
+		textView2 			= (TextView) findViewById(R.id.textView2);
 		lightSensorTV 		= (TextView) findViewById(R.id.tv_sensor_light);
 		distanceSensorTV 	= (TextView) findViewById(R.id.tv_sensor_distance);
 		temperatureSensorTV	= (TextView) findViewById(R.id.tv_sensor_temperature);
@@ -210,6 +218,11 @@ public class TrexController extends Activity {
 		
 		toggleProximityOverride.setChecked(false);
 		toggleSearchControll.setChecked(true);
+		btnPingpongSearchMode.setChecked(true);
+		btnFiremanSearchMode.setChecked(false);
+		btnHeadLight.setChecked(false);
+		
+		searchMode = SearchMode.PING_PONG;
 		
 		platformPowerOverdriveSeekBar = (SeekBar) findViewById(R.id.seekBar_platform_power);
 		platformPowerOverdriveSeekBar.setOnSeekBarChangeListener(platformPowerSeekBarListener);
@@ -264,6 +277,7 @@ public class TrexController extends Activity {
 		analogPadPanTilt.setEnabled(false);
 		toggleMissionControll.setEnabled(false);
 		toggleSearchControll.setEnabled(false);
+		btnHeadLight.setEnabled(false);
 		
 		//demo and test override
 		btnConnect.setOnLongClickListener(new OnLongClickListener() {
@@ -344,6 +358,8 @@ public class TrexController extends Activity {
 		proximityOverride				= false;
 		searchPauseRequested			= false;
 		proximityOverrideRequested		= false;
+		headLightIsOn 					= false;
+		headLightStateChangeRequested 	= false;
 	}
 
 	private void initProximityUI() {
@@ -497,6 +513,15 @@ public class TrexController extends Activity {
 		searchPaused = on;
 		toggleSearchControll.setEnabled(false);
 		if (DEBUG){Toast.makeText(this, "searchPaused : "+searchPaused, Toast.LENGTH_SHORT).show();}
+		
+		if(on){
+			btnPingpongSearchMode.setEnabled(true);
+			btnFiremanSearchMode.setEnabled(true);
+		}else{
+			btnPingpongSearchMode.setEnabled(false);
+			btnFiremanSearchMode.setEnabled(false);
+		}
+		
 	}
 	
 	public void analogpadTest(View view){
@@ -546,6 +571,29 @@ public class TrexController extends Activity {
 			proximityLayout.startAnimation(proximityViewSlideOut);
 			proximityLayout.setVisibility(View.INVISIBLE);
 		}
+	}
+	
+	public void setPingPongSearchMode(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		if(on){
+			btnFiremanSearchMode.setChecked(false);
+		}
+		searchMode = SearchMode.PING_PONG;
+	}
+	
+	public void setFiremanSearchMode(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		if(on){
+			btnPingpongSearchMode.setChecked(false);
+		}
+		searchMode = SearchMode.FIREMAN;
+	}
+	
+	public void toggleHeadLight(View view){
+		boolean on = ((ToggleButton) view).isChecked();
+		headLightIsOn = on;
+		headLightStateChangeRequested = true;
+		btnHeadLight.setEnabled(false);
 	}
 
 	private void trexStop() {
@@ -630,7 +678,8 @@ public class TrexController extends Activity {
 		CompanionAppData request = new CompanionAppData();
 		request.setMessageType(CompanionAppData.REQUEST);
 		request.setRemoteControllEnabled(remoteControlled);		
-		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });		
+		request.setMotorsCommand(new byte[] { (byte) motorA, (byte) motorB });
+		request.setSearchMode(searchMode);
 		
 		//workarround : pan def center :100 tilt def center: 90
 		panTiltWorkArround();
@@ -650,7 +699,8 @@ public class TrexController extends Activity {
 		if(proximityOverrideRequested){
 			proximityOverrideRequested = false;
 		}
-
+		
+		request.setHeadLightOn(headLightIsOn);
 		// Log.d("DD","M1["+motorA+"] M2["+motorB+"]");		
 		return request;
 	}
@@ -674,6 +724,9 @@ public class TrexController extends Activity {
 //	    float humidityReading = responce.getHumidityReading();
 	    float atmosphericPressure = responce.getAtmosphericPressure();
 	    double altitude = responce.getAltitude();
+	    boolean isHeadLightOnResponse = responce.isHeadLightOn();
+	    
+	    SearchMode searchMode = responce.getSearchMode();
 	    
 	    updateProximityUI(getProximityArray(proximity));
 	    
@@ -715,7 +768,14 @@ public class TrexController extends Activity {
 			toggleProximityOverride.setEnabled(true);
 		}
 		
+				
+		if(headLightStateChangeRequested){
+			if(isHeadLightOnResponse == headLightIsOn){
+				headLightStateChangeRequested = false;
+				btnHeadLight.setEnabled(true);
+			}
 			
+		}	
 		
 		if(testBool){
 			searchPaused = searchIsPaused;
@@ -732,6 +792,10 @@ public class TrexController extends Activity {
 			searchPaused = searchIsPaused;
 			toggleSearchControll.setChecked(searchPaused);
 			toggleSearchControll.setEnabled(true);
+		}
+		
+		if(searchMode !=null){
+			textView2.setText("Search Mode: "+searchMode.toString());
 		}
 		
 //		if(searchIsGo && !toggleSearchControll.isChecked()){
@@ -907,6 +971,14 @@ public class TrexController extends Activity {
 								+ classNot.getMessage());
 					}
 					loopCount++;
+					
+//					try {
+//						Thread.sleep(15);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+					
 				} while (connectionStatus);
 			} catch (UnknownHostException unknownHost) {
 				System.err.println("You are trying to connect to an unknown host!");
@@ -941,6 +1013,7 @@ public class TrexController extends Activity {
 				btnFeeds.setEnabled(true);
 				toggleMissionControll.setEnabled(true);
 				toggleSearchControll.setEnabled(true);
+				btnHeadLight.setEnabled(true);
 				
 				btnConnect.setChecked(true);
 			}else if (values[0].getState()== Updateobject.CONNECTING_FALED) {
@@ -954,6 +1027,7 @@ public class TrexController extends Activity {
 				toggleMissionControll.setEnabled(false);
 				toggleSearchControll.setEnabled(false);
 				btnConnect.setChecked(false);
+				btnHeadLight.setEnabled(false);
 			}
  
 
