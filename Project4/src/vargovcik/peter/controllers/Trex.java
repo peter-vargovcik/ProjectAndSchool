@@ -27,11 +27,16 @@ public enum Trex {
     private Serial serial;
 
     private Trex() {
-        serial = SerialFactory.createInstance();
+        serial = SerialFactory.createInstance();        
 
-        serial.open(Serial.DEFAULT_COM_PORT, BAUD_RATE);
-
-        serial.write((byte) 0);
+        try {
+            serial.open(Serial.DEFAULT_COM_PORT, BAUD_RATE);
+            serial.write((byte) 0);
+        } catch (IllegalStateException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }
 
@@ -44,7 +49,13 @@ public enum Trex {
     }
 
     private synchronized void executeCommand(byte[] command, int duration) {
-        serial.write(command);
+        try {
+            serial.write(command);
+        } catch (IllegalStateException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        }
         try {
             Thread.sleep(duration);
         } catch (InterruptedException ex) {
@@ -54,7 +65,13 @@ public enum Trex {
     }
 
     private synchronized void executeCommand(byte[] command) {
-        serial.write(command);
+        try {
+            serial.write(command);
+        } catch (IllegalStateException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void forward(int power, int duration) {
@@ -103,7 +120,13 @@ public enum Trex {
 
     public synchronized void stop() {
         byte[] command = {(byte) 0};
-        serial.write(command);
+        try {
+            serial.write(command);
+        } catch (IllegalStateException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Trex.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void trexExecute(byte[] command) {

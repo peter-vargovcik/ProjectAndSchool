@@ -5,6 +5,7 @@
  */
 package vargovcik.peter.compationApp;
 
+import vargovcik.peter.interfaces.CompanionAppInterface;
 import adafruiti2c.sensor.AdafruitBMP180;
 import com.pi4j.system.SystemInfo;
 import java.io.EOFException;
@@ -91,7 +92,7 @@ public class CompanionAppServer {
                     System.out.println("Waiting for connection");
                     connection = providerSocket.accept();
                     System.out.println("Connection received from " + connection.getInetAddress().getHostName());
-
+                    appInterface.connected();
                     out = new ObjectOutputStream(connection.getOutputStream());
                     out.flush();
                     in = new ObjectInputStream(connection.getInputStream());
@@ -108,14 +109,6 @@ public class CompanionAppServer {
 
                             out.writeObject(dataResponse);
                             out.flush();
-                            
-                            
-//                            try {
-//                                    Thread.sleep(15);
-//                            } catch (InterruptedException e) {
-//                                    // TODO Auto-generated catch block
-//                                    e.printStackTrace();
-//                            }
 
                         }catch (InvalidClassException e){
                             System.err.println("InvalidClassException: "+e.getLocalizedMessage());
@@ -221,28 +214,7 @@ public class CompanionAppServer {
     public SearchInterface getSearchInterface(){
         return this.searchInterface;
     }
-    
-//    private SensorsInterface sensorsInterface = new SensorsInterface(){
-//
-//        @Override
-//        public void distance(int distance) {
-//            distanceReading = distance;
-//        }
-//
-//        @Override
-//        public void lightIntensity(int light) {
-//            lightReading = light;
-//        }
-//    };
 
-//    private ProximityInterface proximityInterface = new ProximityInterface(){
-//
-//        @Override
-//        public void onProximityUpdate(byte proximity) {
-//            proximityByte = proximity;
-//        }
-//    };
-    
     private Thread bmp180SensorThread = new Thread(new Runnable(){
 
         @Override
@@ -273,17 +245,13 @@ public class CompanionAppServer {
                   System.err.println(ex.getMessage()); 
                   ex.printStackTrace();
                 }
-//                System.out.println("Temperature: " + NF.format(temp) + " C");
-//                System.out.println("Pressure   : " + NF.format(press / 100) + " hPa");
-//                System.out.println("Altitude   : " + NF.format(alt) + " m");
+
                 ambientTemperature = temp;
                 baromethricPressure  = press / 100;
                 altitude  = alt;
                 // Bonus : CPU Temperature
                 try
                 {
-//                  System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
-//                  System.out.println("CPU Core Voltage  :  " + SystemInfo.getCpuVoltage());
                   cpuTemperature    = SystemInfo.getCpuTemperature();
                   cpuVoltage        = SystemInfo.getCpuVoltage();
                 }

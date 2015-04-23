@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import vargovcik.peter.compationApp.CompanionAppInterface;
+import vargovcik.peter.interfaces.CompanionAppInterface;
 import vargovcik.peter.compationApp.CompanionAppServer;
 import vargovcik.peter.compationApp.SearchMode;
 import vargovcik.peter.controllers.GPIOController;
@@ -84,32 +84,6 @@ public class Project4 {
      */
     public static void main(String[] args) {
         new Project4();
-
-        /*  // Motor Test Java
-         final Serial serial = SerialFactory.createInstance();
-
-         serial.open(Serial.DEFAULT_COM_PORT, 9600);
-         System.out.println("Powering motor");
-         serial.write(new byte[]{(byte) 75,(byte) 203});
-
-         try {
-         // wait 1 second before continuing
-         Thread.sleep(1000);
-         } catch (InterruptedException ex) {
-         Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
-         }
-        
-         System.out.println("Stoping motor");
-         serial.write((byte) 0);
-        
-         System.out.println("Done");
-         */
-        /*
-         Bmp180 bmp180 = new Bmp180();
-         System.out.println("Temerature: "+bmp180.readTemp());
-         */
-        //trex.forward(20, 500);
-        // Start Video streaming
     }
 
     private void initAll() {
@@ -121,9 +95,7 @@ public class Project4 {
             Thread.sleep(200);
         } catch (InterruptedException ex) {
             Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        
+        }       
         trex = Trex.instance;
                 
         peripheralsController = PeripheralsController.getInstance(proximityInterface);
@@ -168,10 +140,12 @@ public class Project4 {
     }
     
     private void fireFound(int fireReading) {
+        searchIsPaused = true;
         trex.stop();
+        gpioController.fireFound();
         System.out.println("Fire Found !");
         searchInterface.searchPaused();
-        searchIsPaused = true;
+        
     }
     
     private SensorsInterface sensorsInterface = new SensorsInterface(){
@@ -215,7 +189,9 @@ public class Project4 {
         @Override
         public void remoteControll(boolean isRemoteControlled) {
             if (operatorInControll != isRemoteControlled) {
-                System.out.println("remoteControll:" + isRemoteControlled + " current state: " + operatorInControll);
+                gpioController.stopFireFoundEvent();
+                System.out.println("remoteControll:" + isRemoteControlled +
+                        " current state: " + operatorInControll);
             }
             operatorInControll = isRemoteControlled;
 
@@ -225,13 +201,9 @@ public class Project4 {
         public void remoteControlCommand(byte[] command) {
             if (command != null && operatorInControll) {
                 tempCount++;
-//                System.out.println("controled");
                 int motorLeft   = command[0] & 0xFF;
                 int motorRight  = command[1] & 0xFF;
                 
-//                if(tempCount % 10 == 0){
-//                    System.out.println("motorLeft:"+motorLeft+", motorRight:"+motorRight);
-//                }
                 if(motorLeft> 64 && motorRight> 192){
                     remoteControlledMovingForward = true;
                 }
@@ -239,9 +211,6 @@ public class Project4 {
                     remoteControlledMovingForward = false;
                 }
                 
-//                if(tempCount % 10 == 0){
-//                    System.out.println("remoteControlledMovingForward:"+remoteControlledMovingForward);
-//                }
                 remoteControlledommand = command;
             }
         }
@@ -250,7 +219,15 @@ public class Project4 {
         public void connectionBroken() {
             System.out.println("connectionBroken, trex Stop, search paused");
             searchIsPaused = true;
+            gpioController.stopFireFoundEvent();
             trex.stop();
+            gpioController.setSerialRelay(PinState.HIGH);
+        
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
+        }
             
         }
 
@@ -283,15 +260,25 @@ public class Project4 {
         }
 
         @Override
-        public void holdSearch(boolean searchPaused) { 
+        public void holdSearch(boolean searchPaused) {
             if (searchIsPaused != searchPaused){
+                gpioController.stopFireFoundEvent();
                 searchIsPaused = searchPaused;
                 System.out.println("searchIsPaused: " + searchPaused);
+                if(searchIsPaused){
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    trex.stop();
+                }
             }
         }
 
         @Override
         public void teardown() {
+            gpioController.stopFireFoundEvent();
             System.out.println("Tear Down Initiated !!!!");
             theMainLoopIsRunning = false;
             videoStreamSwitch(false);
@@ -346,6 +333,17 @@ public class Project4 {
                 rgbBlueLedIsOn = blueIsOn;
             }            
         }
+
+        @Override
+        public void connected() {
+             gpioController.setSerialRelay(PinState.LOW);
+        
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Project4.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        }
     };
 
     private void startCompanionAppServer() {
@@ -372,7 +370,9 @@ public class Project4 {
         @Override
         public void run() {
             // debug Stuff
-            System.out.println("[operatorInControll = "+operatorInControll+"], [overrideProximity = "+overrideProximity+"], [searchIsPaused = "+searchIsPaused+"]");    
+            System.out.println("[operatorInControll = "+operatorInControll+
+                    "], [overrideProximity = "+overrideProximity+
+                    "], [searchIsPaused = "+searchIsPaused+"]");    
             //init
             int obstacleDetected = 0;
             boolean[] proximityArray = new  boolean[8];
@@ -385,10 +385,21 @@ public class Project4 {
                 }else{
                     gpioController.setRGBGreen(PinState.HIGH);
                 }
+                /*
                 if(searchIsPaused){
                     gpioController.setRedLed(PinState.HIGH);
                 }else{
                     gpioController.setRedLed(PinState.LOW);
+                }
+                */
+                
+                if(!PeripheralsController.rightSideObstacleDetected(rigthHandProximityByte)){
+                    gpioController.setRedLed(PinState.HIGH);
+                    gpioController.setGreenLed(PinState.LOW);
+                }
+                else{
+                    gpioController.setRedLed(PinState.LOW);
+                    gpioController.setGreenLed(PinState.HIGH);
                 }
                 
                 //  The Loop Body
@@ -529,35 +540,3 @@ public class Project4 {
     };
 
 }
-
-
-/*
-while (inSearch) {
-    if (isMoving) {
-        trex.forward(movingSpeed);
-
-        fireReading = fire.getLightIntensity();
-        if (fireReading > 220) {
-            fireFound(fireReading);
-        }
-
-        if (proximity.obstacleDetected() != 0) {
-            boolean[] proximityArray = proximity.getProximityArray();
-
-            if(movingForward &&(proximityArray[1] && proximityArray[2])){
-                trex.rightTurn(180);
-            }
-
-            if( movingForward && (proximityArray[0] || proximityArray[1])){
-                trex.rightTurn(45);
-            }
-
-            if( movingForward && (proximityArray[2] || proximityArray[3])){
-                trex.leftTurn(45);
-            }
-        }
-
-    }
-}
-
-*/

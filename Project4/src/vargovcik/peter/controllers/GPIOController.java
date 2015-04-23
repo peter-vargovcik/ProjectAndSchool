@@ -26,11 +26,12 @@ public enum GPIOController {
             pinMiscellaneous01, pinMiscellaneous02, pinMiscellaneous03, pinMiscellaneous04, pinMiscellaneous05, 
             pinRelaySerial, pinRelayHeadlight, pinRelay03, pinRelay04;
     
-    private boolean emergencyLightsRunning;
-    private static int EMERGENCY_LIGHT_ON_TIMEOUT = 250;
-    private Thread rgbEmergency;
+    private boolean emergencyLightsRunning,firefoundCondition;
+    private static int EMERGENCY_LIGHT_ON_TIMEOUT = 250, FIRE_FOUND_TIMEOUT = 700;
+    private Thread rgbEmergency,fireFoundThread;
     
     private GPIOController(){
+        firefoundCondition = false;
         emergencyLightsRunning = false;
         gpio = GpioFactory.getInstance();
         setPins();
@@ -108,7 +109,12 @@ public enum GPIOController {
     private Runnable rgbEmergencyRunnable = new Runnable(){
 
         @Override
-        public void run() {
+        public synchronized void run() {
+            try {
+                    Thread.sleep(EMERGENCY_LIGHT_ON_TIMEOUT*2);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GPIOController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             while(emergencyLightsRunning){
                 setRGBRed(PinState.LOW);
                 setRGBBlue(PinState.HIGH);
@@ -129,5 +135,45 @@ public enum GPIOController {
             setRGBRed(PinState.HIGH);
         }
     };
+
+    public void fireFound() {
+        if(fireFoundThread == null){
+            firefoundCondition = true;
+            fireFoundThread = new Thread(fireFoundRunnable);
+            fireFoundThread.start();
+        }
+    }
     
+    public void stopFireFoundEvent(){
+        if(fireFoundThread !=null){
+            firefoundCondition = false;
+            fireFoundThread = null;
+        }
+        
+    }
+    
+    private  Runnable fireFoundRunnable = new Runnable(){
+
+        @Override
+        public synchronized void run() {
+             while(firefoundCondition){
+                setRGBRed(PinState.LOW);
+                setHeadlight(PinState.LOW);
+                try {
+                    Thread.sleep(FIRE_FOUND_TIMEOUT);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GPIOController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                setRGBRed(PinState.HIGH);
+                setHeadlight(PinState.HIGH);
+                try {
+                    Thread.sleep(FIRE_FOUND_TIMEOUT);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GPIOController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            setRGBRed(PinState.HIGH);
+            setHeadlight(PinState.HIGH);
+        }
+    };
 }

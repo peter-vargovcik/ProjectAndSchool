@@ -3,7 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package vargovcik.peter.compationApp;
+package vargovcik.peter.interfaces;
+
+import vargovcik.peter.compationApp.SearchMode;
 
 /**
  *
@@ -15,6 +17,7 @@ public interface CompanionAppInterface {
     void remoteControll(boolean isRemoteControlled);
     void remoteControlCommand(byte[] command);
     void connectionBroken();
+    void connected();
     void platformMaxPower(int power);
     void ignoreProximity(boolean ignore);    
     void headLight(boolean on);
